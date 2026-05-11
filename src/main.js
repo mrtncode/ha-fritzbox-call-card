@@ -1,6 +1,21 @@
+import './editor.js';
 import { formatDuration, isRingingAnswered } from './utils.js';
 
 class FritzboxCallCard extends HTMLElement {
+  static getConfigElement() {
+    
+    return document.createElement("fritzbox-call-card-editor");
+  }
+
+  static getStubConfig() {
+    return {
+      entities: [],
+      max_calls: 10,
+      hours_to_show: 24,
+      title: "📞 Call History",
+    }
+  }
+
   setConfig(config) {
     if (!config || !Array.isArray(config.entities)) {
       throw new Error("Invalid configuration: 'entities' must be an array.");

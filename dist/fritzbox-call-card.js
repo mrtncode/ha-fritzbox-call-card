@@ -1,10 +1,66 @@
+import { LitElement as e, html as t } from "lit";
+//#region src/editor.js
+var n = class n extends e {
+	static properties = {
+		hass: {},
+		_config: {}
+	};
+	setConfig(e) {
+		this._config = {
+			title: "",
+			entities: [],
+			max_calls: 10,
+			...e
+		};
+	}
+	static getConfigForm() {
+		return { schema: [
+			{
+				name: "title",
+				selector: { text: {} }
+			},
+			{
+				name: "entities",
+				selector: { entity: { multiple: !0 } }
+			},
+			{
+				name: "max_calls",
+				selector: { number: {
+					min: 1,
+					max: 50,
+					step: 1
+				} }
+			}
+		] };
+	}
+	render() {
+		return !this.hass || !this._config ? t`` : t`
+      <ha-form
+        .hass=${this.hass}
+        .data=${this._config}
+        .schema=${n.getConfigForm().schema}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
+    `;
+	}
+	_valueChanged(e) {
+		let t = e.detail.value;
+		this.dispatchEvent(new CustomEvent("config-changed", {
+			detail: { config: t },
+			bubbles: !0,
+			composed: !0
+		}));
+	}
+};
+customElements.define("fritzbox-call-card-editor", n);
+//#endregion
 //#region src/utils.js
-function e(e) {
+function r(e) {
 	if (!Number.isFinite(e) || e < 0) return "unknown";
 	let t = Math.floor(e / 1e3), n = Math.floor(t / 60), r = t % 60;
 	return n > 0 ? `${n}m ${r.toString().padStart(2, "0")}s` : `${r}s`;
 }
-function t(e, t) {
+function i(e, t) {
 	for (let n = t + 1; n < e.length; n += 1) {
 		if (e[n].state === "talking") return !0;
 		if (e[n].state === "ringing" || e[n].state === "dialing") return !1;
@@ -13,7 +69,18 @@ function t(e, t) {
 }
 //#endregion
 //#region src/main.js
-var n = class extends HTMLElement {
+var a = class extends HTMLElement {
+	static getConfigElement() {
+		return document.createElement("fritzbox-call-card-editor");
+	}
+	static getStubConfig() {
+		return {
+			entities: [],
+			max_calls: 10,
+			hours_to_show: 24,
+			title: "📞 Call History"
+		};
+	}
 	setConfig(e) {
 		if (!e || !Array.isArray(e.entities)) throw Error("Invalid configuration: 'entities' must be an array.");
 		this.config = {
@@ -60,25 +127,25 @@ var n = class extends HTMLElement {
 			return console.warn("Failed to fetch history for", n, t), [];
 		}
 	}
-	_buildCallEntries(n, r) {
-		if (!Array.isArray(n)) return [];
-		let i = r?.entity || r, a = [...n].sort((e, t) => new Date(e.last_changed) - new Date(t.last_changed)), o = [];
-		for (let n = 0; n < a.length; n += 1) {
-			let s = a[n];
+	_buildCallEntries(e, t) {
+		if (!Array.isArray(e)) return [];
+		let n = t?.entity || t, a = [...e].sort((e, t) => new Date(e.last_changed) - new Date(t.last_changed)), o = [];
+		for (let e = 0; e < a.length; e += 1) {
+			let s = a[e];
 			if (![
 				"talking",
 				"dialing",
 				"ringing"
-			].includes(s.state) || s.state === "ringing" && t(a, n)) continue;
-			let c = new Date(s.last_changed), l = a[n + 1], u = l ? new Date(l.last_changed) : /* @__PURE__ */ new Date(), d = Math.max(0, u - c);
+			].includes(s.state) || s.state === "ringing" && i(a, e)) continue;
+			let c = new Date(s.last_changed), l = a[e + 1], u = l ? new Date(l.last_changed) : /* @__PURE__ */ new Date(), d = Math.max(0, u - c);
 			o.push({
-				id: `${i}-${s.state}-${s.last_changed || s.last_updated || ""}`,
-				number: this._extractNumber(s, r),
-				headline: this._extractNumber(s, r),
-				label: this._extractLabel(s, r),
+				id: `${n}-${s.state}-${s.last_changed || s.last_updated || ""}`,
+				number: this._extractNumber(s, t),
+				headline: this._extractNumber(s, t),
+				label: this._extractLabel(s, t),
 				state: s.state,
 				time: s.state === "talking" ? s.attributes?.accepted ? new Date(s.attributes.accepted) : c : s.state === "dialing" && s.attributes?.initiated ? new Date(s.attributes.initiated) : c,
-				duration: e(d)
+				duration: r(d)
 			});
 		}
 		return o;
@@ -136,5 +203,11 @@ var n = class extends HTMLElement {
     `;
 	}
 };
-customElements.define("fritzbox-call-card", n);
+customElements.define("fritzbox-call-card", a), window.customCards.push({
+	type: "fritzbox-call-card",
+	name: "Fritzbox Call Card",
+	preview: !1,
+	description: "Fritzbox call card editor",
+	documentationURL: "https://developers.home-assistant.io/docs/frontend/custom-ui/custom-card"
+});
 //#endregion

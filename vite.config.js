@@ -9,10 +9,13 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: "src/main.js",
-      name: "FritzboxCallCard",
-      fileName: "fritzbox-call-card",
-      formats: ["es"]
+      entry: 'src/main.js',
+      name: 'FritzboxCallCard',
+      fileName: 'fritzbox-call-card',
+      formats: ['es']
+    },
+    rollupOptions: {
+      external: ["lit"]
     }
   }
 });
