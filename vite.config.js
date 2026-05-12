@@ -5,7 +5,11 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    cors: true
+    cors: true,
+    watch: {
+      usePolling: true,
+      interval: 100
+    }
   },
   build: {
     lib: {
@@ -15,7 +19,7 @@ export default defineConfig({
       formats: ['es']
     },
     rollupOptions: {
-      external: ["lit"]
+      external: []
     }
   }
 });

@@ -11,6 +11,7 @@ class FritzboxCallCardEditor extends LitElement {
       title: "",
       entities: [],
       max_calls: 10,
+      max_hours: 24,
       ...config,
     };
   }
@@ -43,6 +44,16 @@ class FritzboxCallCardEditor extends LitElement {
             },
           },
         },
+        {
+          name: "max_hours",
+          selector: {
+            number: {
+              min: 1,
+              max: 72,
+              step: 1,
+            },
+          },
+        }
       ],
     };
   }
@@ -74,7 +85,6 @@ class FritzboxCallCardEditor extends LitElement {
     );
   }
 }
-console.log("EDITOR!!")
 customElements.define(
   "fritzbox-call-card-editor",
   FritzboxCallCardEditor,

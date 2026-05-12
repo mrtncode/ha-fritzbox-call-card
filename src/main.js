@@ -11,7 +11,7 @@ class FritzboxCallCard extends HTMLElement {
     return {
       entities: [],
       max_calls: 10,
-      hours_to_show: 24,
+      max_hours: 24,
       title: "📞 Call History",
     }
   }
@@ -26,9 +26,9 @@ class FritzboxCallCard extends HTMLElement {
       max_calls: Number.isInteger(config.max_calls)
         ? config.max_calls
         : parseInt(config.max_calls, 10) || 10,
-      hours_to_show: Number.isFinite(config.hours_to_show)
-        ? config.hours_to_show
-        : parseInt(config.hours_to_show, 10) || 24,
+      max_hours: Number.isFinite(config.max_hours)
+        ? config.max_hours
+        : parseInt(config.max_hours, 10) || 24,
       ...config,
     };
     this.calls = [];
@@ -91,7 +91,7 @@ class FritzboxCallCard extends HTMLElement {
     }
 
     const end = new Date();
-    const start = new Date(end.getTime() - this.config.hours_to_show * 3600000);
+    const start = new Date(end.getTime() - this.config.max_hours * 3600000);
 
     const historyPromises = this.config.entities.map((entityConfig) =>
       this._fetchEntityHistory(entityConfig, start, end),
