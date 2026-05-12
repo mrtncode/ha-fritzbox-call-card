@@ -154,8 +154,7 @@ class FritzboxCallCard extends HTMLElement {
       }
 
       const start = new Date(item.last_changed);
-      const next = sorted[i + 1];
-      const end = next ? new Date(next.last_changed) : new Date();
+      const end = this._getHistoryEndTime(sorted, i, entityId);
       const durationMs = Math.max(0, end - start);
 
       entries.push({
@@ -190,6 +189,22 @@ class FritzboxCallCard extends HTMLElement {
       }
     });
     return Object.values(unique).slice(0, this.config.max_calls);
+  }
+
+  _getHistoryEndTime(sorted, index, entityId) {
+    const item = sorted[index];
+    for (let j = index + 1; j < sorted.length; j += 1) {
+      if (sorted[j].state !== item.state) {
+        return new Date(sorted[j].last_changed || sorted[j].last_updated || Date.now());
+      }
+    }
+
+    const currentState = this._hass?.states?.[entityId];
+    if (currentState && !['talking', 'dialing', 'ringing'].includes(currentState.state)) {
+      return new Date(currentState.last_changed || currentState.last_updated || Date.now());
+    }
+
+    return new Date();
   }
 
   _extractNumber(state, entityConfig) {

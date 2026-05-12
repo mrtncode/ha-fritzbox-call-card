@@ -701,7 +701,7 @@ var he = class extends HTMLElement {
 				"dialing",
 				"ringing"
 			].includes(a.state) || a.state === "ringing" && me(r, e)) continue;
-			let o = new Date(a.last_changed), s = r[e + 1], c = s ? new Date(s.last_changed) : /* @__PURE__ */ new Date(), l = Math.max(0, c - o);
+			let o = new Date(a.last_changed), s = this._getHistoryEndTime(r, e, n), c = Math.max(0, s - o);
 			i.push({
 				id: `${n}-${a.state}-${a.last_changed || a.last_updated || ""}`,
 				number: this._extractNumber(a, t),
@@ -709,7 +709,7 @@ var he = class extends HTMLElement {
 				label: this._extractLabel(a, t),
 				state: a.state,
 				time: a.state === "talking" ? a.attributes?.accepted ? new Date(a.attributes.accepted) : o : a.state === "dialing" && a.attributes?.initiated ? new Date(a.attributes.initiated) : o,
-				duration: pe(l)
+				duration: pe(c)
 			});
 		}
 		return i;
@@ -719,6 +719,16 @@ var he = class extends HTMLElement {
 		return [...e].sort((e, t) => t.time - e.time).forEach((e) => {
 			t[e.id] || (t[e.id] = e);
 		}), Object.values(t).slice(0, this.config.max_calls);
+	}
+	_getHistoryEndTime(e, t, n) {
+		let r = e[t];
+		for (let n = t + 1; n < e.length; n += 1) if (e[n].state !== r.state) return new Date(e[n].last_changed || e[n].last_updated || Date.now());
+		let i = this._hass?.states?.[n];
+		return i && ![
+			"talking",
+			"dialing",
+			"ringing"
+		].includes(i.state) ? new Date(i.last_changed || i.last_updated || Date.now()) : /* @__PURE__ */ new Date();
 	}
 	_extractNumber(e, t) {
 		let n = e.attributes || {}, r = [
