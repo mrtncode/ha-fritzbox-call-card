@@ -1,7 +1,10 @@
 import './editor.js';
 import { formatDuration, isRingingAnswered } from './utils.js';
+import en from '../translations/en.json';
 
 class FritzboxCallCard extends HTMLElement {
+  langs = { en };
+
   static getConfigElement() {
     
     return document.createElement("fritzbox-call-card-editor");
@@ -245,20 +248,36 @@ class FritzboxCallCard extends HTMLElement {
         ? dialToName
         : dialToNumber;
 
-    let label = state.state;
+    let label = this._localize(`state.${state.state}`) || state.state;
     if (state.state === 'dialing') {
       if (type === 'outgoing' || dialTarget) {
-        label = `Outgoing call to ${dialTarget || dialFrom || 'unknown'}`;
+        label = this._formatTranslation(
+          this._localize('call.outgoing_to'),
+          { name: dialTarget || dialFrom || this._localize('common.unknown') },
+        );
       } else {
-        label = `Incoming call from ${dialFrom || 'unknown'}`;
+        label = this._formatTranslation(
+          this._localize('call.incoming_from'),
+          { name: dialFrom || this._localize('common.unknown') },
+        );
       }
     } else if (state.state === 'ringing') {
-      label = caller ? `Missed call from ${caller}` : 'Missed call';
+      label = caller
+        ? this._formatTranslation(this._localize('call.missed_from'), {
+            name: caller,
+          })
+        : this._localize('call.missed_call');
     } else if (state.state === 'talking') {
       if (type === 'outgoing' || dialTarget) {
-        label = `Outgoing call to ${dialTarget || caller || 'unknown'}`;
+        label = this._formatTranslation(
+          this._localize('call.outgoing_to'),
+          { name: dialTarget || caller || this._localize('common.unknown') },
+        );
       } else {
-        label = `Incoming call from ${caller || dialFrom || 'unknown'}`;
+        label = this._formatTranslation(
+          this._localize('call.incoming_from'),
+          { name: caller || dialFrom || this._localize('common.unknown') },
+        );
       }
     }
 
@@ -269,24 +288,51 @@ class FritzboxCallCard extends HTMLElement {
         attributes.direction ||
         attributes.source ||
         attributes.destination ||
-        state.state;
+        this._localize(`state.${state.state}`) || state.state;
     }
 
     return label.trim();
   }
 
+  _formatTranslation(template, values = {}) {
+    if (typeof template !== 'string') {
+      return template;
+    }
+    return template.replace(/\{(\w+)\}/g, (_, key) =>
+      typeof values[key] !== 'undefined' ? values[key] : `{${key}}`,
+    );
+  }
+
+  _localize(key, lang = this._hass?.locale?.language || 'en') {
+    console.log("hass lang", this._hass?.locale?.language);
+    const code = lang.split('-')[0];
+    const keys = key.split('.');
+
+    let a = this.langs[code];
+    if (!a) a = this.langs['en'];
+
+    for (const k of keys) {
+      if (typeof a[k] === 'undefined') {
+        if (keys[0] === 'weather_state') return keys[1];
+        return this.langs['en'][keys[0]][keys[1]];
+      }
+      a = a[k];
+    }
+    return a;
+  }
+
   render() {
-    const title = this.config?.title || '📞 Call History';
+    const title = this.config?.title || this._localize('common.call_history');
     const body = this._loading
-      ? '<div>Loading call history...</div>'
+      ? `<div>${this._localize('common.loading')}</div>`
       : this.calls.length === 0
-      ? '<div>No calls yet</div>'
+      ? `<div>${this._localize('common.no_calls')}</div>`
       : `<ul style="list-style: none; padding: 0; margin: 0;">
             ${this.calls
               .map(
                 (call) => `
               <li style="padding: 10px 0; border-bottom: 1px solid #eee;">
-                <strong style="display: block; margin-bottom: 4px;">${call.headline || 'Unknown'}</strong>
+                <strong style="display: block; margin-bottom: 4px;">${call.headline || this._localize('common.unknown')}</strong>
                 <small>${call.label} · ${call.time.toLocaleTimeString()} · ${call.duration}</small>
               </li>
             `,

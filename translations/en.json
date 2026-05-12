@@ -1,0 +1,27 @@
+{
+  "common": {
+    "call_history": "📞 Call History",
+    "loading": "Loading call history...",
+    "no_calls": "No calls yet",
+    "unknown": "Unknown"
+  },
+  "call": {
+    "incoming_from": "Incoming call from {name}",
+    "outgoing_to": "Outgoing call to {name}",
+    "missed_from": "Missed call from {name}",
+    "missed_call": "Missed call"
+  },
+  "state": {
+    "talking": "Talking",
+    "dialing": "Dialing",
+    "ringing": "Ringing",
+    "unknown": "Unknown"
+  },
+  "editor": {
+    "title": "Title",
+    "entities": "Entities",
+    "language": "Language",
+    "max_calls": "Max calls",
+    "max_hours": "Max hours"
+  }
+}

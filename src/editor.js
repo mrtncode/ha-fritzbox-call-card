@@ -1,10 +1,13 @@
 import { LitElement, html } from "lit";
+import en from "../translations/en.json";
 
 class FritzboxCallCardEditor extends LitElement {
   static properties = {
     hass: {},
     _config: {},
   };
+
+  static langs = { en };
 
   setConfig(config) {
     this._config = {
@@ -16,6 +19,19 @@ class FritzboxCallCardEditor extends LitElement {
     };
   }
   
+  static _localize(key, lang = this._hass?.locale?.language || "en") {
+    const code = String(lang || 'en').split('-')[0];
+    const keys = key.split('.');
+    let a = this.langs[code] || this.langs['en'];
+
+    for (const k of keys) {
+      if (typeof a[k] === 'undefined') {
+        return this.langs['en']?.[keys[0]]?.[keys[1]] || '';
+      }
+      a = a[k];
+    }
+    return a;
+  }
 
   static getConfigForm() {
     return {
@@ -58,6 +74,20 @@ class FritzboxCallCardEditor extends LitElement {
     };
   }
 
+  _computeLabel(schema) {
+    const language = this._config?.language || this.hass?.locale?.language || 'en';
+    const keys = {
+      title: 'editor.title',
+      entities: 'editor.entities',
+      language: 'editor.language',
+      max_calls: 'editor.max_calls',
+      max_hours: 'editor.max_hours',
+    };
+    return keys[schema.name]
+      ? FritzboxCallCardEditor._localize(keys[schema.name], language)
+      : undefined;
+  }
+
   render() {
     if (!this.hass || !this._config) {
       return html``;
@@ -68,6 +98,7 @@ class FritzboxCallCardEditor extends LitElement {
         .hass=${this.hass}
         .data=${this._config}
         .schema=${FritzboxCallCardEditor.getConfigForm().schema}
+        .computeLabel=${this._computeLabel.bind(this)}
         @value-changed=${this._valueChanged}
       ></ha-form>
     `;
