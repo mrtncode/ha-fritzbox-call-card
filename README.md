@@ -13,8 +13,6 @@ Custom dashboard card for the Home Assistant [Fritz!Box Callmonitor integration]
 The card shows automatically the call history from the Fritz!Box Callmonitor. No automations or similar needed. The card fetches the data directly from the HA history.
 Translations available for English and German. Other translations may follow :)
 
-If you like the Card, I would appreciate a Star rating ⭐ from you. 🤗
-
 ## Features
 - ### Automatically fetch the calls history
 - ### Support for different call types: missing call, outgoing call and incoming call
