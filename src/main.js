@@ -38,6 +38,7 @@ class FritzboxCallCard extends HTMLElement {
     this._lastEntityStates = {};
     this._loading = false;
     this._initialized = false;
+    this._filter = 'all';
   }
 
   set hass(hass) {
@@ -331,6 +332,12 @@ class FritzboxCallCard extends HTMLElement {
     `;
   }
 
+  _setFilter(filter) {
+    if (this._filter === filter) return;
+    this._filter = filter;
+    this.render();
+  }
+
   _localize(key, lang = this._hass?.locale?.language || 'en') {
     console.log("hass lang", this._hass?.locale?.language);
     const code = lang.split('-')[0];
@@ -351,12 +358,40 @@ class FritzboxCallCard extends HTMLElement {
 
   render() {
     const title = this.config?.title || this._localize('common.call_history');
+
+    const filteredCalls =
+      this._filter === 'all'
+        ? this.calls
+        : this.calls.filter((call) => {
+            if (this._filter === 'missed') return call.state === 'ringing';
+            if (this._filter === 'outgoing') return call.type === 'outgoing' || call.state === 'dialing';
+            if (this._filter === 'incoming') return !(call.type === 'outgoing' || call.state === 'dialing') && call.state !== 'ringing';
+            return true;
+          });
+
+    const chipBase = 'padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;';
+    const chipSelected = 'box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);';
+
+    const allStyle = chipBase + (this._filter === 'all' ? chipSelected : '');
+    const missedStyle = chipBase + (this._filter === 'missed' ? 'border-color:#e0b4b4;' + chipSelected : '');
+    const outgoingStyle = chipBase + (this._filter === 'outgoing' ? 'border-color:#9fc8f8;' + chipSelected : '');
+    const incomingStyle = chipBase + (this._filter === 'incoming' ? 'border-color:#bfe8c7;' + chipSelected : '');
+
+    const chipsHtml = `
+      <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+        <button class="fbc-chip" data-filter="all" style="${allStyle}">${this._localize('common.all') || 'All'}</button>
+        <button class="fbc-chip" data-filter="missed" style="${missedStyle}">${this._localize('call.missed') || 'Missed'}</button>
+        <button class="fbc-chip" data-filter="outgoing" style="${outgoingStyle}">${this._localize('call.outgoing') || 'Outgoing'}</button>
+        <button class="fbc-chip" data-filter="incoming" style="${incomingStyle}">${this._localize('call.incoming') || 'Incoming'}</button>
+      </div>
+    `;
+
     const body = this._loading
       ? `<div>${this._localize('common.loading')}</div>`
-      : this.calls.length === 0
-      ? `<div>${this._localize('common.no_calls')}</div>`
-      : `<ul style="list-style: none; padding: 0; margin: 0;">
-            ${this.calls
+      : `${chipsHtml}
+          ${filteredCalls.length === 0 ? `<div>${this._localize('common.no_calls')}</div>` : ''}
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            ${filteredCalls
               .map(
                 (call) => `
               <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
@@ -373,11 +408,19 @@ class FritzboxCallCard extends HTMLElement {
 
     this.innerHTML = `
       <ha-card header="${title}">
-        <div style="padding: 12px; min-height: 120px;">
+        <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
           ${body}
         </div>
       </ha-card>
     `;
+
+    // Wire up chip click handlers
+    const chips = this.querySelectorAll('.fbc-chip');
+    chips.forEach((el) => {
+      el.removeEventListener('click', el._fbcClick);
+      el._fbcClick = (e) => this._setFilter(e.currentTarget.dataset.filter);
+      el.addEventListener('click', el._fbcClick);
+    });
   }
 }
 

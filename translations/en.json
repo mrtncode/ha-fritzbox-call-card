@@ -9,7 +9,10 @@
     "incoming_from": "Incoming call from {name}",
     "outgoing_to": "Outgoing call to {name}",
     "missed_from": "Missed call from {name}",
-    "missed_call": "Missed call"
+    "missed_call": "Missed call",
+    "missed": "Missed",
+    "outgoing": "Outgoing",
+    "incoming": "Incoming"
   },
   "state": {
     "talking": "Talking",

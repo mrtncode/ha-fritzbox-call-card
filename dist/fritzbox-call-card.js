@@ -513,7 +513,10 @@ var $ = {
 		incoming_from: "Incoming call from {name}",
 		outgoing_to: "Outgoing call to {name}",
 		missed_from: "Missed call from {name}",
-		missed_call: "Missed call"
+		missed_call: "Missed call",
+		missed: "Missed",
+		outgoing: "Outgoing",
+		incoming: "Incoming"
 	},
 	state: {
 		talking: "Talking",
@@ -652,7 +655,7 @@ var he = class extends HTMLElement {
 			max_calls: Number.isInteger(e.max_calls) ? e.max_calls : parseInt(e.max_calls, 10) || 10,
 			max_hours: Number.isFinite(e.max_hours) ? e.max_hours : parseInt(e.max_hours, 10) || 24,
 			...e
-		}, this.calls = [], this._lastEntityStates = {}, this._loading = !1, this._initialized = !1;
+		}, this.calls = [], this._lastEntityStates = {}, this._loading = !1, this._initialized = !1, this._filter = "all";
 	}
 	set hass(e) {
 		if (this._hass = e, !this.config || !Array.isArray(this.config.entities)) return;
@@ -771,6 +774,9 @@ var he = class extends HTMLElement {
       </svg>
     `;
 	}
+	_setFilter(e) {
+		this._filter !== e && (this._filter = e, this.render());
+	}
 	_localize(e, t = this._hass?.locale?.language || "en") {
 		console.log("hass lang", this._hass?.locale?.language);
 		let n = t.split("-")[0], r = e.split("."), i = this.langs[n];
@@ -782,8 +788,17 @@ var he = class extends HTMLElement {
 		return i;
 	}
 	render() {
-		let e = this.config?.title || this._localize("common.call_history"), t = this._loading ? `<div>${this._localize("common.loading")}</div>` : this.calls.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : `<ul style="list-style: none; padding: 0; margin: 0;">
-            ${this.calls.map((e) => `
+		let e = this.config?.title || this._localize("common.call_history"), t = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), n = "padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;", r = "box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);", i = n + (this._filter === "all" ? r : ""), a = n + (this._filter === "missed" ? "border-color:#e0b4b4;" + r : ""), o = n + (this._filter === "outgoing" ? "border-color:#9fc8f8;" + r : ""), s = n + (this._filter === "incoming" ? "border-color:#bfe8c7;" + r : ""), c = `
+      <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+        <button class="fbc-chip" data-filter="all" style="${i}">${this._localize("common.all") || "All"}</button>
+        <button class="fbc-chip" data-filter="missed" style="${a}">${this._localize("call.missed") || "Missed"}</button>
+        <button class="fbc-chip" data-filter="outgoing" style="${o}">${this._localize("call.outgoing") || "Outgoing"}</button>
+        <button class="fbc-chip" data-filter="incoming" style="${s}">${this._localize("call.incoming") || "Incoming"}</button>
+      </div>
+    `, l = this._loading ? `<div>${this._localize("common.loading")}</div>` : `${c}
+          ${t.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : ""}
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            ${t.map((e) => `
               <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
                 ${this._iconForCall(e)}
                 <div style="">
@@ -795,11 +810,13 @@ var he = class extends HTMLElement {
           </ul>`;
 		this.innerHTML = `
       <ha-card header="${e}">
-        <div style="padding: 12px; min-height: 120px;">
-          ${t}
+        <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
+          ${l}
         </div>
       </ha-card>
-    `;
+    `, this.querySelectorAll(".fbc-chip").forEach((e) => {
+			e.removeEventListener("click", e._fbcClick), e._fbcClick = (e) => this._setFilter(e.currentTarget.dataset.filter), e.addEventListener("click", e._fbcClick);
+		});
 	}
 };
 customElements.define("fritzbox-call-card", he);
