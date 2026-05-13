@@ -708,6 +708,7 @@ var he = class extends HTMLElement {
 				headline: this._extractNumber(a, t),
 				label: this._extractLabel(a, t),
 				state: a.state,
+				type: a.attributes?.type || "",
 				time: a.state === "talking" ? a.attributes?.accepted ? new Date(a.attributes.accepted) : o : a.state === "dialing" && a.attributes?.initiated ? new Date(a.attributes.initiated) : o,
 				duration: pe(c)
 			});
@@ -762,6 +763,14 @@ var he = class extends HTMLElement {
 	_formatTranslation(e, t = {}) {
 		return typeof e == "string" ? e.replace(/\{(\w+)\}/g, (e, n) => t[n] === void 0 ? `{${n}}` : t[n]) : e;
 	}
+	_iconForCall(e) {
+		let t = e.state === "ringing", n = e.type === "outgoing" || e.state === "dialing", r = t ? "#e53935" : n ? "#1e88e5" : "#43a047";
+		return `
+      <svg width="21" height="21" viewBox="0 0 24 24" aria-label="${t ? this._localize("call.missed") || "Missed" : n ? this._localize("call.outgoing") || "Outgoing" : this._localize("call.incoming") || "Incoming"}" role="img" style="vertical-align:middle; margin-right:8px;">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.73 3.03a2 2 0 0 1-.45 2.11L8.91 10.91a16 16 0 0 0 6 6l1.05-1.05a2 2 0 0 1 2.11-.45c.96.36 1.98.61 3.03.73A2 2 0 0 1 22 16.92z" fill="none" stroke="${r}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+	}
 	_localize(e, t = this._hass?.locale?.language || "en") {
 		console.log("hass lang", this._hass?.locale?.language);
 		let n = t.split("-")[0], r = e.split("."), i = this.langs[n];
@@ -775,9 +784,12 @@ var he = class extends HTMLElement {
 	render() {
 		let e = this.config?.title || this._localize("common.call_history"), t = this._loading ? `<div>${this._localize("common.loading")}</div>` : this.calls.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : `<ul style="list-style: none; padding: 0; margin: 0;">
             ${this.calls.map((e) => `
-              <li style="padding: 10px 0; border-bottom: 1px solid #eee;">
-                <strong style="display: block; margin-bottom: 4px;">${e.headline || this._localize("common.unknown")}</strong>
-                <small>${e.label} · ${e.time.toLocaleTimeString()} · ${e.duration}</small>
+              <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+                ${this._iconForCall(e)}
+                <div style="">
+                  <strong style="display: block; margin-bottom: 4px;">${e.headline || this._localize("common.unknown")}</strong>
+                  <small style="display:block;">${e.label} · ${e.time.toLocaleTimeString()} · ${e.duration}</small>
+                </div>
               </li>
             `).join("")}
           </ul>`;

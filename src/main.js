@@ -163,6 +163,7 @@ class FritzboxCallCard extends HTMLElement {
         headline: this._extractNumber(item, entityConfig),
         label: this._extractLabel(item, entityConfig),
         state: item.state,
+        type: item.attributes?.type || '',
         time:
           item.state === 'talking'
             ? item.attributes?.accepted
@@ -318,6 +319,18 @@ class FritzboxCallCard extends HTMLElement {
     );
   }
 
+  _iconForCall(call) {
+    const isMissed = call.state === 'ringing';
+    const isOutgoing = call.type === 'outgoing' || call.state === 'dialing';
+    const color = isMissed ? '#e53935' : isOutgoing ? '#1e88e5' : '#43a047';
+    const title = isMissed ? this._localize('call.missed') || 'Missed' : isOutgoing ? this._localize('call.outgoing') || 'Outgoing' : this._localize('call.incoming') || 'Incoming';
+    return `
+      <svg width="21" height="21" viewBox="0 0 24 24" aria-label="${title}" role="img" style="vertical-align:middle; margin-right:8px;">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.73 3.03a2 2 0 0 1-.45 2.11L8.91 10.91a16 16 0 0 0 6 6l1.05-1.05a2 2 0 0 1 2.11-.45c.96.36 1.98.61 3.03.73A2 2 0 0 1 22 16.92z" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+  }
+
   _localize(key, lang = this._hass?.locale?.language || 'en') {
     console.log("hass lang", this._hass?.locale?.language);
     const code = lang.split('-')[0];
@@ -346,9 +359,12 @@ class FritzboxCallCard extends HTMLElement {
             ${this.calls
               .map(
                 (call) => `
-              <li style="padding: 10px 0; border-bottom: 1px solid #eee;">
-                <strong style="display: block; margin-bottom: 4px;">${call.headline || this._localize('common.unknown')}</strong>
-                <small>${call.label} · ${call.time.toLocaleTimeString()} · ${call.duration}</small>
+              <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+                ${this._iconForCall(call)}
+                <div style="">
+                  <strong style="display: block; margin-bottom: 4px;">${call.headline || this._localize('common.unknown')}</strong>
+                  <small style="display:block;">${call.label} · ${call.time.toLocaleTimeString()} · ${call.duration}</small>
+                </div>
               </li>
             `,
               )
