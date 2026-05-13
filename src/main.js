@@ -1,9 +1,11 @@
 import './editor.js';
 import { formatDuration, isRingingAnswered } from './utils.js';
 import en from '../translations/en.json';
+import de from '../translations/de.json';
 
 class FritzboxCallCard extends HTMLElement {
-  langs = { en };
+  langs = { en, de };
+  
 
   static getConfigElement() {
     

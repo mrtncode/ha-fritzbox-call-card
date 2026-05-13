@@ -633,10 +633,41 @@ function me(e, t) {
 	}
 	return !1;
 }
-//#endregion
-//#region src/main.js
-var he = class extends HTMLElement {
-	langs = { en: $ };
+var he = {
+	common: {
+		call_history: "📞 Anrufverlauf",
+		loading: "Anrufverlauf wird geladen...",
+		no_calls: "Noch keine Anrufe",
+		unknown: "Unbekannt",
+		all: "Alle"
+	},
+	call: {
+		incoming_from: "Eingehender Anruf von {name}",
+		outgoing_to: "Ausgehender Anruf an {name}",
+		missed_from: "Verpasster Anruf von {name}",
+		missed_call: "Verpasster Anruf",
+		missed: "Verpasst",
+		outgoing: "Ausgehend",
+		incoming: "Eingehend"
+	},
+	state: {
+		talking: "Im Gespräch",
+		dialing: "Wählt",
+		ringing: "Klingelt",
+		unknown: "Unbekannt"
+	},
+	editor: {
+		title: "Titel",
+		entities: "Entitäten",
+		language: "Sprache",
+		max_calls: "Max. Anrufe",
+		max_hours: "Max. Stunden"
+	}
+}, ge = class extends HTMLElement {
+	langs = {
+		en: $,
+		de: he
+	};
 	static getConfigElement() {
 		return document.createElement("fritzbox-call-card-editor");
 	}
@@ -819,5 +850,5 @@ var he = class extends HTMLElement {
 		});
 	}
 };
-customElements.define("fritzbox-call-card", he);
+customElements.define("fritzbox-call-card", ge);
 //#endregion
