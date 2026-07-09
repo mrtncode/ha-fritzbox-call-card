@@ -370,7 +370,7 @@ class FritzboxCallCard extends HTMLElement {
       ? `
           <div style="margin-top:20px;">
             <h3 style="margin:0 0 10px;">
-              📼 Voicemail
+              Voicemail
             </h3>
             ${this.voicemail.render()}
           </div>

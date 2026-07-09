@@ -671,7 +671,7 @@ var he = {
 	}
 }, ge = class {
 	constructor(e) {
-		this.card = e, this.audio = null, this.currentlyPlayingIndex = null;
+		this.card = e, this.audio = null, this.currentlyPlayingIndex = null, this.root = null;
 	}
 	get entity() {
 		let e = this.card.config?.voicemail_entity;
@@ -682,7 +682,7 @@ var he = {
 	}
 	async deleteMessage(e) {
 		try {
-			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
+			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
 				delete_mode: "specific",
 				message_index: Number(e)
 			});
@@ -692,111 +692,126 @@ var he = {
 	}
 	async deleteAll() {
 		try {
-			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
+			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
 		} catch (e) {
 			console.error("Failed to delete all voicemail messages", e);
 		}
 	}
 	render() {
 		return this.messages.length ? `
-      <div>
-        <div style="
-          display:flex;
-          justify-content:flex-end;
-          margin-bottom:8px;
-        ">
-          <button
-            class="fbc-voicemail-delete-all"
-            style="
-              border:none;
-              background:none;
-              cursor:pointer;
-            ">
+      <div class="fbc-voicemail-container">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color: var(--primary-text-color);">
             🗑 All
           </button>
         </div>
 
-        <ul style="list-style:none;padding:0;margin:0;">
-          ${this.messages.map((e) => `
-            <li style="
-              padding:10px 0;
-              border-bottom:1px solid #eee;
-              display:flex;
-              align-items:center;
-              justify-content:space-between;
-            ">
-              <div>
-                <strong>
-                  ${e.Name || e.Number || "Unknown"}
-                </strong>
+        <ul style="list-style:none; padding:0; margin:0;">
+          ${this.messages.map((e) => {
+			let t = String(e.Index) === String(this.currentlyPlayingIndex);
+			return `
+            <li style="padding:12px 0; border-bottom:1px solid var(--divider-color); display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                <div>
+                  <strong style="color: var(--primary-text-color);">
+                    ${e.Name || e.Number || "Unknown"}
+                  </strong>
+                  <br>
+                  <small style="color: var(--secondary-text-color);">
+                    ${e.Date || ""}
+                  </small>
+                </div>
 
-                <br>
-
-                <small>
-                  ${e.Date || ""}
-                  ${e.Duration ? ` · ${e.Duration}` : ""}
-                </small>
-
-                ${e.Index === void 0 ? "" : `
-                    <div>
-                      <button
-                        class="fbc-voicemail-play"
-                        data-index="${e.Index}"
-                        style="
-                          border:none;
-                          background:none;
-                          cursor:pointer;
-                        ">
-                        ▶️ Play
-                      </button>
-                    </div>
-                    `}
+                <button class="fbc-voicemail-delete" data-index="${e.Index}" style="border:none; background:none; cursor:pointer; color: var(--error-color); font-size: 1.1em;">
+                  🗑
+                </button>
               </div>
 
-              <button
-                class="fbc-voicemail-delete"
-                data-index="${e.Index}"
-                style="
-                  border:none;
-                  background:none;
-                  cursor:pointer;
-                ">
-                🗑
-              </button>
+              ${e.Index === void 0 ? "" : `
+                <div class="fbc-audio-player-row" data-index="${e.Index}" style="display:flex; align-items:center; gap:10px; width:100%; margin-top:4px;">
+                  <button class="fbc-voicemail-toggle" data-index="${e.Index}" style="border:none; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.9em; box-shadow: var(--ha-card-box-shadow, none);">
+                    ${t && !this.audio?.paused ? "⏸" : "▶️"}
+                  </button>
+                  
+                  <div style="flex-grow:1; display:flex; flex-direction:column; gap:2px;">
+                    <input type="range" class="fbc-audio-slider" data-index="${e.Index}" min="0" max="100" value="0" step="0.1" ${t ? "" : "disabled"} style="width:100%; accent-color: var(--primary-color); cursor: pointer; margin:0;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.75em; color: var(--secondary-text-color); font-family: monospace;">
+                      <span class="fbc-audio-current-time" data-index="${e.Index}">0:00</span>
+                      <!-- Displaying pre-loaded message attribute directly before playback starts -->
+                      <span class="fbc-audio-duration" data-index="${e.Index}" data-initial=""></span>
+                    </div>
+                  </div>
+                </div>
+              `}
             </li>
-          `).join("")}
+          `;
+		}).join("")}
         </ul>
       </div>
-    ` : "\n        <div style=\"padding:8px 0;\">\n          No messages\n        </div>\n      ";
+    ` : "\n        <div style=\"padding:8px 0; color: var(--secondary-text-color);\">\n          No messages\n        </div>\n      ";
 	}
 	attachEvents(e) {
-		e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => {
-			e.onclick = () => {
-				this.deleteMessage(e.dataset.index);
-			};
+		this.root = e, e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => {
+			e.onclick = () => this.deleteMessage(e.dataset.index);
 		});
 		let t = e.querySelector(".fbc-voicemail-delete-all");
-		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-play").forEach((e) => {
-			e.onclick = () => {
-				this.play(e.dataset.index);
-			};
+		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-toggle").forEach((e) => {
+			e.onclick = () => this.handlePlayPause(e.dataset.index);
+		}), e.querySelectorAll(".fbc-audio-slider").forEach((e) => {
+			e.oninput = (t) => this.handleSeek(t, e.dataset.index);
 		});
 	}
-	async play(e) {
-		console.log("Playing voicemail index:", e), this.audio &&= (this.audio.pause(), null);
+	stopCurrentAudio() {
+		this.audio &&= (this.audio.pause(), this.audio.ontimeupdate = null, this.audio.onloadedmetadata = null, this.audio.onended = null, null);
+	}
+	async handlePlayPause(e) {
+		if (String(this.currentlyPlayingIndex) === String(e) && this.audio) {
+			this.audio.paused ? (await this.audio.play(), this.updateButtonUI(e, "⏸")) : (this.audio.pause(), this.updateButtonUI(e, "▶️"));
+			return;
+		}
+		this.currentlyPlayingIndex !== null && this.resetTrackVisuals(this.currentlyPlayingIndex), this.stopCurrentAudio(), this.currentlyPlayingIndex = e, this.updateButtonUI(e, "⏳");
 		try {
 			let t = `media-source://fritzbox_voicemail/${e}`, n = await this.card._hass.callWS({
 				type: "media_source/resolve_media",
 				media_content_id: t
 			});
-			if (!n || !n.url) throw Error("Could not resolve media URL from backend.");
+			if (!n?.url) throw Error("No playback URL resolved");
 			let r = window.location.origin + n.url;
-			console.log("Resolved streaming path:", r), this.audio = new Audio(r), this.audio.type = n.mime_type || "audio/wav", await this.audio.play(), this.currentlyPlayingIndex = e, this.audio.onended = () => {
-				this.currentlyPlayingIndex = null, console.log("Audio playback finished.");
+			this.audio = new Audio(r), this.audio.type = n.mime_type || "audio/wav", this.audio.onloadedmetadata = () => {
+				let t = this.root.querySelector(`.fbc-audio-duration[data-index="${e}"]`);
+				t && (t.textContent = this.formatTime(this.audio.duration));
+			}, this.audio.ontimeupdate = () => {
+				if (!this.audio) return;
+				let t = this.audio.currentTime / this.audio.duration * 100, n = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`), r = this.root.querySelector(`.fbc-audio-current-time[data-index="${e}"]`);
+				n && (n.value = t || 0), r && (r.textContent = this.formatTime(this.audio.currentTime));
+			}, this.audio.onended = () => {
+				this.resetTrackVisuals(e), this.stopCurrentAudio(), this.currentlyPlayingIndex = null;
 			};
-		} catch (e) {
-			console.error("Failed to play voicemail audio:", e), this.currentlyPlayingIndex = null;
+			let i = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`);
+			i && (i.disabled = !1), await this.audio.play(), this.updateButtonUI(e, "⏸");
+		} catch (t) {
+			console.error("Audio engine failed:", t), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
 		}
+	}
+	handleSeek(e, t) {
+		if (String(this.currentlyPlayingIndex) === String(t) && this.audio && this.audio.duration) {
+			let t = parseFloat(e.target.value);
+			this.audio.currentTime = t / 100 * this.audio.duration;
+		}
+	}
+	updateButtonUI(e, t) {
+		let n = this.root.querySelector(`.fbc-voicemail-toggle[data-index="${e}"]`);
+		n && (n.textContent = t);
+	}
+	resetTrackVisuals(e) {
+		this.updateButtonUI(e, "▶️");
+		let t = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`), n = this.root.querySelector(`.fbc-audio-current-time[data-index="${e}"]`), r = this.root.querySelector(`.fbc-audio-duration[data-index="${e}"]`);
+		t && (t.value = 0, t.disabled = !0), n && (n.textContent = "0:00"), r && (r.textContent = r.dataset.initial || "0:00");
+	}
+	formatTime(e) {
+		if (isNaN(e)) return "0:00";
+		let t = Math.floor(e / 60), n = Math.floor(e % 60);
+		return `${t}:${n < 10 ? "0" : ""}${n}`;
 	}
 }, _e = class extends HTMLElement {
 	langs = {
@@ -961,7 +976,7 @@ var he = {
 		let t = this.config?.voicemail_entity ? `
           <div style="margin-top:20px;">
             <h3 style="margin:0 0 10px;">
-              📼 Voicemail
+              Voicemail
             </h3>
             ${this.voicemail.render()}
           </div>
