@@ -2,6 +2,7 @@ import './editor.js';
 import { formatDuration, isRingingAnswered } from './utils.js';
 import en from '../translations/en.json';
 import de from '../translations/de.json';
+import { FritzboxVoicemail } from './voicemail.js';
 
 class FritzboxCallCard extends HTMLElement {
   langs = { en, de };
@@ -14,20 +15,22 @@ class FritzboxCallCard extends HTMLElement {
 
   static getStubConfig() {
     return {
-      entities: [],
+      call_entities: [],
+      voicemail_entity: null,
       max_calls: 10,
       max_hours: 24,
       title: "📞 Call History",
-    }
+    };
   }
 
   setConfig(config) {
-    if (!config || !Array.isArray(config.entities)) {
-      throw new Error("Invalid configuration: 'entities' must be an array.");
+    if (!config || !Array.isArray(config.call_entities)) {
+      throw new Error("Invalid configuration: 'call_entities' must be an array.");
     }
 
     this.config = {
       title: config.title || "📞 Call History",
+      voicemail_entity: config.voicemail_entity || null,
       max_calls: Number.isInteger(config.max_calls)
         ? config.max_calls
         : parseInt(config.max_calls, 10) || 10,
@@ -41,18 +44,19 @@ class FritzboxCallCard extends HTMLElement {
     this._loading = false;
     this._initialized = false;
     this._filter = 'all';
+    this.voicemail = new FritzboxVoicemail(this);
   }
 
   set hass(hass) {
     this._hass = hass;
 
-    if (!this.config || !Array.isArray(this.config.entities)) {
+    if (!this.config || !Array.isArray(this.config.call_entities)) {
       return;
     }
 
     let changed = false;
 
-    this.config.entities.forEach((entityConfig) => {
+    this.config.call_entities.forEach((entityConfig) => {
       const entityId = entityConfig?.entity || entityConfig;
       const state = hass.states[entityId];
       if (!state) {
@@ -92,20 +96,20 @@ class FritzboxCallCard extends HTMLElement {
   }
 
   async _updateHistory() {
-    if (!this._hass || !Array.isArray(this.config.entities)) {
+    if (!this._hass || !Array.isArray(this.config.call_entities)) {
       return;
     }
 
     const end = new Date();
     const start = new Date(end.getTime() - this.config.max_hours * 3600000);
 
-    const historyPromises = this.config.entities.map((entityConfig) =>
+    const historyPromises = this.config.call_entities.map((entityConfig) =>
       this._fetchEntityHistory(entityConfig, start, end),
     );
 
     const histories = await Promise.all(historyPromises);
     const allCalls = histories.flatMap((history, index) =>
-      this._buildCallEntries(history, this.config.entities[index]),
+      this._buildCallEntries(history, this.config.call_entities[index]),
     );
 
     this.calls = this._mergeCallEntries(allCalls);
@@ -361,6 +365,18 @@ class FritzboxCallCard extends HTMLElement {
   render() {
     const title = this.config?.title || this._localize('common.call_history');
 
+    console.log("voicemail", this.config?.voicemail_entity)
+    const voicemailHtml = this.config?.voicemail_entity
+      ? `
+          <div style="margin-top:20px;">
+            <h3 style="margin:0 0 10px;">
+              📼 Voicemail
+            </h3>
+            ${this.voicemail.render()}
+          </div>
+        `
+      : "";
+
     const filteredCalls =
       this._filter === 'all'
         ? this.calls
@@ -391,6 +407,8 @@ class FritzboxCallCard extends HTMLElement {
     const body = this._loading
       ? `<div>${this._localize('common.loading')}</div>`
       : `${chipsHtml}
+        ${voicemailHtml}
+
           ${filteredCalls.length === 0 ? `<div>${this._localize('common.no_calls')}</div>` : ''}
           <ul style="list-style: none; padding: 0; margin: 0;">
             ${filteredCalls
@@ -423,6 +441,10 @@ class FritzboxCallCard extends HTMLElement {
       el._fbcClick = (e) => this._setFilter(e.currentTarget.dataset.filter);
       el.addEventListener('click', el._fbcClick);
     });
+
+    if (this.voicemail) {
+      this.voicemail.attachEvents(this);
+    }
   }
 }
 

@@ -526,7 +526,7 @@ var $ = {
 	},
 	editor: {
 		title: "Title",
-		entities: "Entities",
+		call_entities: "call_entities",
 		language: "Language",
 		max_calls: "Max calls",
 		max_hours: "Max hours"
@@ -540,7 +540,8 @@ var $ = {
 	setConfig(e) {
 		this._config = {
 			title: "",
-			entities: [],
+			call_entities: [],
+			voicemail_entity: "",
 			max_calls: 10,
 			max_hours: 24,
 			...e
@@ -561,8 +562,12 @@ var $ = {
 				selector: { text: {} }
 			},
 			{
-				name: "entities",
+				name: "call_entities",
 				selector: { entity: { multiple: !0 } }
+			},
+			{
+				name: "voicemail_entity",
+				selector: { entity: {} }
 			},
 			{
 				name: "max_calls",
@@ -585,7 +590,8 @@ var $ = {
 	_computeLabel(t) {
 		let n = this._config?.language || this.hass?.locale?.language || "en", r = {
 			title: "editor.title",
-			entities: "editor.entities",
+			call_entities: "editor.call_entities",
+			device: "editor.device",
 			language: "editor.language",
 			max_calls: "editor.max_calls",
 			max_hours: "editor.max_hours"
@@ -658,12 +664,141 @@ var he = {
 	},
 	editor: {
 		title: "Titel",
-		entities: "Entitäten",
+		call_entities: "Entitäten",
 		language: "Sprache",
 		max_calls: "Max. Anrufe",
 		max_hours: "Max. Stunden"
 	}
-}, ge = class extends HTMLElement {
+}, ge = class {
+	constructor(e) {
+		this.card = e, this.audio = null, this.currentlyPlayingIndex = null;
+	}
+	get entity() {
+		let e = this.card.config?.voicemail_entity;
+		return !e || !this.card._hass ? null : this.card._hass.states[e] || null;
+	}
+	get messages() {
+		return this.entity?.attributes?.messages || [];
+	}
+	async deleteMessage(e) {
+		try {
+			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
+				delete_mode: "specific",
+				message_index: Number(e)
+			});
+		} catch (e) {
+			console.error("Failed to delete voicemail message", e);
+		}
+	}
+	async deleteAll() {
+		try {
+			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
+		} catch (e) {
+			console.error("Failed to delete all voicemail messages", e);
+		}
+	}
+	render() {
+		return this.messages.length ? `
+      <div>
+        <div style="
+          display:flex;
+          justify-content:flex-end;
+          margin-bottom:8px;
+        ">
+          <button
+            class="fbc-voicemail-delete-all"
+            style="
+              border:none;
+              background:none;
+              cursor:pointer;
+            ">
+            🗑 All
+          </button>
+        </div>
+
+        <ul style="list-style:none;padding:0;margin:0;">
+          ${this.messages.map((e) => `
+            <li style="
+              padding:10px 0;
+              border-bottom:1px solid #eee;
+              display:flex;
+              align-items:center;
+              justify-content:space-between;
+            ">
+              <div>
+                <strong>
+                  ${e.Name || e.Number || "Unknown"}
+                </strong>
+
+                <br>
+
+                <small>
+                  ${e.Date || ""}
+                  ${e.Duration ? ` · ${e.Duration}` : ""}
+                </small>
+
+                ${e.Index === void 0 ? "" : `
+                    <div>
+                      <button
+                        class="fbc-voicemail-play"
+                        data-index="${e.Index}"
+                        style="
+                          border:none;
+                          background:none;
+                          cursor:pointer;
+                        ">
+                        ▶️ Play
+                      </button>
+                    </div>
+                    `}
+              </div>
+
+              <button
+                class="fbc-voicemail-delete"
+                data-index="${e.Index}"
+                style="
+                  border:none;
+                  background:none;
+                  cursor:pointer;
+                ">
+                🗑
+              </button>
+            </li>
+          `).join("")}
+        </ul>
+      </div>
+    ` : "\n        <div style=\"padding:8px 0;\">\n          No messages\n        </div>\n      ";
+	}
+	attachEvents(e) {
+		e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => {
+			e.onclick = () => {
+				this.deleteMessage(e.dataset.index);
+			};
+		});
+		let t = e.querySelector(".fbc-voicemail-delete-all");
+		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-play").forEach((e) => {
+			e.onclick = () => {
+				this.play(e.dataset.index);
+			};
+		});
+	}
+	async play(e) {
+		console.log("Playing voicemail index:", e), this.audio &&= (this.audio.pause(), null);
+		try {
+			let t = `media-source://fritzbox_voicemail/${e}`, n = await this.card._hass.callWS({
+				type: "media_source/resolve_media",
+				media_content_id: t
+			});
+			if (!n || !n.url) throw Error("Could not resolve media URL from backend.");
+			let r = window.location.origin + n.url;
+			console.log("Resolved streaming path:", r), this.audio = new Audio(r), this.audio.type = n.mime_type || "audio/wav", await this.audio.play(), this.currentlyPlayingIndex = e, this.audio.onended = () => {
+				this.currentlyPlayingIndex = null, console.log("Audio playback finished.");
+			};
+		} catch (e) {
+			console.error("Failed to play voicemail audio:", e), this.currentlyPlayingIndex = null;
+		}
+	}
+}, _e = class extends HTMLElement {
 	langs = {
 		en: $,
 		de: he
@@ -673,25 +808,27 @@ var he = {
 	}
 	static getStubConfig() {
 		return {
-			entities: [],
+			call_entities: [],
+			voicemail_entity: null,
 			max_calls: 10,
 			max_hours: 24,
 			title: "📞 Call History"
 		};
 	}
 	setConfig(e) {
-		if (!e || !Array.isArray(e.entities)) throw Error("Invalid configuration: 'entities' must be an array.");
+		if (!e || !Array.isArray(e.call_entities)) throw Error("Invalid configuration: 'call_entities' must be an array.");
 		this.config = {
 			title: e.title || "📞 Call History",
+			voicemail_entity: e.voicemail_entity || null,
 			max_calls: Number.isInteger(e.max_calls) ? e.max_calls : parseInt(e.max_calls, 10) || 10,
 			max_hours: Number.isFinite(e.max_hours) ? e.max_hours : parseInt(e.max_hours, 10) || 24,
 			...e
-		}, this.calls = [], this._lastEntityStates = {}, this._loading = !1, this._initialized = !1, this._filter = "all";
+		}, this.calls = [], this._lastEntityStates = {}, this._loading = !1, this._initialized = !1, this._filter = "all", this.voicemail = new ge(this);
 	}
 	set hass(e) {
-		if (this._hass = e, !this.config || !Array.isArray(this.config.entities)) return;
+		if (this._hass = e, !this.config || !Array.isArray(this.config.call_entities)) return;
 		let t = !1;
-		this.config.entities.forEach((n) => {
+		this.config.call_entities.forEach((n) => {
 			let r = n?.entity || n, i = e.states[r];
 			if (!i) {
 				console.warn("Entity not found in HA:", r);
@@ -708,8 +845,8 @@ var he = {
 		this._hass && this.render();
 	}
 	async _updateHistory() {
-		if (!this._hass || !Array.isArray(this.config.entities)) return;
-		let e = /* @__PURE__ */ new Date(), t = /* @__PURE__ */ new Date(e.getTime() - this.config.max_hours * 36e5), n = this.config.entities.map((n) => this._fetchEntityHistory(n, t, e)), r = (await Promise.all(n)).flatMap((e, t) => this._buildCallEntries(e, this.config.entities[t]));
+		if (!this._hass || !Array.isArray(this.config.call_entities)) return;
+		let e = /* @__PURE__ */ new Date(), t = /* @__PURE__ */ new Date(e.getTime() - this.config.max_hours * 36e5), n = this.config.call_entities.map((n) => this._fetchEntityHistory(n, t, e)), r = (await Promise.all(n)).flatMap((e, t) => this._buildCallEntries(e, this.config.call_entities[t]));
 		this.calls = this._mergeCallEntries(r), this._loading = !1, this.render();
 	}
 	async _fetchEntityHistory(e, t, n) {
@@ -819,17 +956,28 @@ var he = {
 		return i;
 	}
 	render() {
-		let e = this.config?.title || this._localize("common.call_history"), t = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), n = "padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;", r = "box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);", i = n + (this._filter === "all" ? r : ""), a = n + (this._filter === "missed" ? "border-color:#e0b4b4;" + r : ""), o = n + (this._filter === "outgoing" ? "border-color:#9fc8f8;" + r : ""), s = n + (this._filter === "incoming" ? "border-color:#bfe8c7;" + r : ""), c = `
+		let e = this.config?.title || this._localize("common.call_history");
+		console.log("voicemail", this.config?.voicemail_entity);
+		let t = this.config?.voicemail_entity ? `
+          <div style="margin-top:20px;">
+            <h3 style="margin:0 0 10px;">
+              📼 Voicemail
+            </h3>
+            ${this.voicemail.render()}
+          </div>
+        ` : "", n = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), r = "padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;", i = "box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);", a = r + (this._filter === "all" ? i : ""), o = r + (this._filter === "missed" ? "border-color:#e0b4b4;" + i : ""), s = r + (this._filter === "outgoing" ? "border-color:#9fc8f8;" + i : ""), c = r + (this._filter === "incoming" ? "border-color:#bfe8c7;" + i : ""), l = `
       <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
-        <button class="fbc-chip" data-filter="all" style="${i}">${this._localize("common.all") || "All"}</button>
-        <button class="fbc-chip" data-filter="missed" style="${a}">${this._localize("call.missed") || "Missed"}</button>
-        <button class="fbc-chip" data-filter="outgoing" style="${o}">${this._localize("call.outgoing") || "Outgoing"}</button>
-        <button class="fbc-chip" data-filter="incoming" style="${s}">${this._localize("call.incoming") || "Incoming"}</button>
+        <button class="fbc-chip" data-filter="all" style="${a}">${this._localize("common.all") || "All"}</button>
+        <button class="fbc-chip" data-filter="missed" style="${o}">${this._localize("call.missed") || "Missed"}</button>
+        <button class="fbc-chip" data-filter="outgoing" style="${s}">${this._localize("call.outgoing") || "Outgoing"}</button>
+        <button class="fbc-chip" data-filter="incoming" style="${c}">${this._localize("call.incoming") || "Incoming"}</button>
       </div>
-    `, l = this._loading ? `<div>${this._localize("common.loading")}</div>` : `${c}
-          ${t.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : ""}
+    `, u = this._loading ? `<div>${this._localize("common.loading")}</div>` : `${l}
+        ${t}
+
+          ${n.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : ""}
           <ul style="list-style: none; padding: 0; margin: 0;">
-            ${t.map((e) => `
+            ${n.map((e) => `
               <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
                 ${this._iconForCall(e)}
                 <div style="">
@@ -842,13 +990,13 @@ var he = {
 		this.innerHTML = `
       <ha-card header="${e}">
         <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
-          ${l}
+          ${u}
         </div>
       </ha-card>
     `, this.querySelectorAll(".fbc-chip").forEach((e) => {
 			e.removeEventListener("click", e._fbcClick), e._fbcClick = (e) => this._setFilter(e.currentTarget.dataset.filter), e.addEventListener("click", e._fbcClick);
-		});
+		}), this.voicemail && this.voicemail.attachEvents(this);
 	}
 };
-customElements.define("fritzbox-call-card", ge);
+customElements.define("fritzbox-call-card", _e);
 //#endregion

@@ -23,7 +23,7 @@
   },
   "editor": {
     "title": "Titel",
-    "entities": "Entitäten",
+    "call_entities": "Entitäten",
     "language": "Sprache",
     "max_calls": "Max. Anrufe",
     "max_hours": "Max. Stunden"

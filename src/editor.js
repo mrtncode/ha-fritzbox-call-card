@@ -12,24 +12,26 @@ class FritzboxCallCardEditor extends LitElement {
   setConfig(config) {
     this._config = {
       title: "",
-      entities: [],
+      call_entities: [],
+      voicemail_entity: "",
       max_calls: 10,
       max_hours: 24,
       ...config,
     };
   }
-  
+
   static _localize(key, lang = this._hass?.locale?.language || "en") {
-    const code = String(lang || 'en').split('-')[0];
-    const keys = key.split('.');
-    let a = this.langs[code] || this.langs['en'];
+    const code = String(lang || "en").split("-")[0];
+    const keys = key.split(".");
+    let a = this.langs[code] || this.langs["en"];
 
     for (const k of keys) {
-      if (typeof a[k] === 'undefined') {
-        return this.langs['en']?.[keys[0]]?.[keys[1]] || '';
+      if (typeof a[k] === "undefined") {
+        return this.langs["en"]?.[keys[0]]?.[keys[1]] || "";
       }
       a = a[k];
     }
+
     return a;
   }
 
@@ -43,11 +45,17 @@ class FritzboxCallCardEditor extends LitElement {
           },
         },
         {
-          name: "entities",
+          name: "call_entities",
           selector: {
             entity: {
               multiple: true,
             },
+          },
+        },
+        {
+          name: "voicemail_entity",
+          selector: {
+            entity: {},
           },
         },
         {
@@ -69,20 +77,24 @@ class FritzboxCallCardEditor extends LitElement {
               step: 1,
             },
           },
-        }
+        },
       ],
     };
   }
 
   _computeLabel(schema) {
-    const language = this._config?.language || this.hass?.locale?.language || 'en';
+    const language =
+      this._config?.language || this.hass?.locale?.language || "en";
+
     const keys = {
-      title: 'editor.title',
-      entities: 'editor.entities',
-      language: 'editor.language',
-      max_calls: 'editor.max_calls',
-      max_hours: 'editor.max_hours',
+      title: "editor.title",
+      call_entities: "editor.call_entities",
+      device: "editor.device",
+      language: "editor.language",
+      max_calls: "editor.max_calls",
+      max_hours: "editor.max_hours",
     };
+
     return keys[schema.name]
       ? FritzboxCallCardEditor._localize(keys[schema.name], language)
       : undefined;
@@ -116,6 +128,7 @@ class FritzboxCallCardEditor extends LitElement {
     );
   }
 }
+
 customElements.define(
   "fritzbox-call-card-editor",
   FritzboxCallCardEditor,

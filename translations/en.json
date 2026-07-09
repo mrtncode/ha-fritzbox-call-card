@@ -22,7 +22,7 @@
   },
   "editor": {
     "title": "Title",
-    "entities": "Entities",
+    "call_entities": "call_entities",
     "language": "Language",
     "max_calls": "Max calls",
     "max_hours": "Max hours"
