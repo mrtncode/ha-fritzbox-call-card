@@ -7,13 +7,7 @@ export class FritzboxVoicemail {
   }
 
   get entity() {
-    const entityId = this.card.config?.voicemail_entity;
-
-    if (!entityId || !this.card._hass) {
-      return null;
-    }
-
-    return this.card._hass.states[entityId] || null;
+    return (this.card.config?.voicemail_entity && this.card._hass) ? this.card._hass.states[this.card.config.voicemail_entity] || null : null;
   }
 
   get messages() {
@@ -21,98 +15,69 @@ export class FritzboxVoicemail {
   }
 
   async deleteMessage(index) {
+    if (!confirm("Are you sure you want to delete this voicemail?")) return;
     try {
       this.stopCurrentAudio();
-      await this.card._hass.callService(
-        "fritzbox_voicemail",
-        "delete_voicemail_message",
-        {
-          delete_mode: "specific",
-          message_index: Number(index),
-        },
-      );
+      await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "specific", message_index: Number(index) });
     } catch (err) {
-      console.error("Failed to delete voicemail message", err);
+      console.error(err);
     }
   }
 
   async deleteAll() {
+    if (!confirm("Are you sure you want to delete ALL voicemails?")) return;
     try {
       this.stopCurrentAudio();
-      await this.card._hass.callService(
-        "fritzbox_voicemail",
-        "delete_voicemail_message",
-        {
-          delete_mode: "all",
-        },
-      );
+      await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
     } catch (err) {
-      console.error("Failed to delete all voicemail messages", err);
+      console.error(err);
     }
   }
 
   render() {
-    if (!this.messages.length) {
-      return `
-        <div style="padding:8px 0; color: var(--secondary-text-color);">
-          No messages
-        </div>
-      `;
-    }
-
+    if (!this.messages.length) return `<div style="padding:4px 0; font-size:13px; color:var(--secondary-text-color);">No messages</div>`;
     return `
-      <div class="fbc-voicemail-container">
-        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color: var(--primary-text-color);">
-            🗑 All
+      <div class="fbc-voicemail-container" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--divider-color, #eee); padding-bottom:4px;">
+          <span style="font-size:12px; font-weight:bold; color:var(--secondary-text-color);">Voicemails</span>
+          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color:var(--error-color, #e53935); display:flex; align-items:center; padding:2px; font-size:11px; font-weight:500;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Clear All
           </button>
         </div>
-
-        <ul style="list-style:none; padding:0; margin:0;">
-          ${this.messages
-            .map((msg) => {
-              const isCurrent = String(msg.Index) === String(this.currentlyPlayingIndex);
-              
-              const initialDuration = ""
-
-              return `
-            <li style="padding:12px 0; border-bottom:1px solid var(--divider-color); display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                <div>
-                  <strong style="color: var(--primary-text-color);">
-                    ${msg.Name || msg.Number || "Unknown"}
-                  </strong>
-                  <br>
-                  <small style="color: var(--secondary-text-color);">
-                    ${msg.Date || ""}
-                  </small>
-                </div>
-
-                <button class="fbc-voicemail-delete" data-index="${msg.Index}" style="border:none; background:none; cursor:pointer; color: var(--error-color); font-size: 1.1em;">
-                  🗑
-                </button>
-              </div>
-
-              ${msg.Index !== undefined ? `
-                <div class="fbc-audio-player-row" data-index="${msg.Index}" style="display:flex; align-items:center; gap:10px; width:100%; margin-top:4px;">
-                  <button class="fbc-voicemail-toggle" data-index="${msg.Index}" style="border:none; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.9em; box-shadow: var(--ha-card-box-shadow, none);">
-                    ${isCurrent && !this.audio?.paused ? "⏸" : "▶️"}
+        <ul style="list-style:none; padding:0; margin:0; max-height:180px; overflow-y:auto;">
+          ${this.messages.map((msg) => {
+            const isCur = String(msg.Index) === String(this.currentlyPlayingIndex);
+            return `
+              <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%; min-width:0;">
+                  <div style="min-width:0; flex-grow:1;">
+                    <strong style="font-size:12px; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.Name || msg.Number || "Unknown"}</strong>
+                    <small style="font-size:10px; color:var(--secondary-text-color); display:block;">${msg.Date || ""}</small>
+                  </div>
+                  <button class="fbc-voicemail-delete" data-index="${msg.Index}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
-                  
-                  <div style="flex-grow:1; display:flex; flex-direction:column; gap:2px;">
-                    <input type="range" class="fbc-audio-slider" data-index="${msg.Index}" min="0" max="100" value="0" step="0.1" ${!isCurrent ? "disabled" : ""} style="width:100%; accent-color: var(--primary-color); cursor: pointer; margin:0;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.75em; color: var(--secondary-text-color); font-family: monospace;">
-                      <span class="fbc-audio-current-time" data-index="${msg.Index}">0:00</span>
-                      <!-- Displaying pre-loaded message attribute directly before playback starts -->
-                      <span class="fbc-audio-duration" data-index="${msg.Index}" data-initial="${initialDuration}">${initialDuration}</span>
+                </div>
+                ${msg.Index !== undefined ? `
+                  <div class="fbc-audio-player-row" data-index="${msg.Index}" style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <button class="fbc-voicemail-toggle" data-index="${msg.Index}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
+                      ${isCur && !this.audio?.paused ? 
+                        `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg>` : 
+                        `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-left:1px;"><polygon points="5 3 19 12 5 21"/></svg>`
+                      }
+                    </button>
+                    <div style="flex-grow:1; display:flex; flex-direction:column;">
+                      <input type="range" class="fbc-audio-slider" data-index="${msg.Index}" min="0" max="100" value="0" step="0.1" ${!isCur ? "disabled" : ""} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
+                      <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
+                        <span class="fbc-audio-current-time" data-index="${msg.Index}">0:00</span>
+                        <span class="fbc-audio-duration" data-index="${msg.Index}" data-initial=""></span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ` : ""}
-            </li>
-          `;
-            })
-            .join("")}
+                ` : ""}
+              </li>
+            `;
+          }).join("")}
         </ul>
       </div>
     `;
@@ -120,31 +85,17 @@ export class FritzboxVoicemail {
 
   attachEvents(root) {
     this.root = root;
-
-    root.querySelectorAll(".fbc-voicemail-delete").forEach((button) => {
-      button.onclick = () => this.deleteMessage(button.dataset.index);
-    });
-
-    const deleteAll = root.querySelector(".fbc-voicemail-delete-all");
-    if (deleteAll) {
-      deleteAll.onclick = () => this.deleteAll();
-    }
-
-    root.querySelectorAll(".fbc-voicemail-toggle").forEach((button) => {
-      button.onclick = () => this.handlePlayPause(button.dataset.index);
-    });
-
-    root.querySelectorAll(".fbc-audio-slider").forEach((slider) => {
-      slider.oninput = (e) => this.handleSeek(e, slider.dataset.index);
-    });
+    root.querySelectorAll(".fbc-voicemail-delete").forEach(b => b.onclick = () => this.deleteMessage(b.dataset.index));
+    const delAll = root.querySelector(".fbc-voicemail-delete-all");
+    if (delAll) delAll.onclick = () => this.deleteAll();
+    root.querySelectorAll(".fbc-voicemail-toggle").forEach(b => b.onclick = () => this.handlePlayPause(b.dataset.index));
+    root.querySelectorAll(".fbc-audio-slider").forEach(s => s.oninput = (e) => this.handleSeek(e, s.dataset.index));
   }
 
   stopCurrentAudio() {
     if (this.audio) {
       this.audio.pause();
-      this.audio.ontimeupdate = null;
-      this.audio.onloadedmetadata = null;
-      this.audio.onended = null;
+      this.audio.ontimeupdate = this.audio.onloadedmetadata = this.audio.onended = null;
       this.audio = null;
     }
   }
@@ -153,10 +104,10 @@ export class FritzboxVoicemail {
     if (String(this.currentlyPlayingIndex) === String(index) && this.audio) {
       if (this.audio.paused) {
         await this.audio.play();
-        this.updateButtonUI(index, "⏸");
+        this.updateButtonUI(index, "playing");
       } else {
         this.audio.pause();
-        this.updateButtonUI(index, "▶️");
+        this.updateButtonUI(index, "paused");
       }
       return;
     }
@@ -167,7 +118,7 @@ export class FritzboxVoicemail {
     this.stopCurrentAudio();
 
     this.currentlyPlayingIndex = index;
-    this.updateButtonUI(index, "⏳"); 
+    this.updateButtonUI(index, "loading"); 
 
     try {
       const mediaSourceId = `media-source://fritzbox_voicemail/${index}`;
@@ -208,7 +159,7 @@ export class FritzboxVoicemail {
       if (activeSlider) activeSlider.disabled = false;
 
       await this.audio.play();
-      this.updateButtonUI(index, "⏸");
+      this.updateButtonUI(index, "playing");
 
     } catch (err) {
       console.error("Audio engine failed:", err);
@@ -224,13 +175,34 @@ export class FritzboxVoicemail {
     }
   }
 
-  updateButtonUI(index, symbol) {
-    const btn = this.root.querySelector(`.fbc-voicemail-toggle[data-index="${index}"]`);
-    if (btn) btn.textContent = symbol;
-  }
+  updateButtonUI(index, state) {
+      const btn = this.root.querySelector(`.fbc-voicemail-toggle[data-index="${index}"]`);
+      if (!btn) return;
 
+      if (state === "playing") {
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg>`;
+      } else if (state === "loading") {
+        // Inline-Styles direkt auf dem SVG erzwingen die Rotation im Center des Icons
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" 
+            style="animation: fbc-spin 1s linear infinite; transform-origin: center;">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-linecap="round"></path>
+            <style>
+              @keyframes fbc-spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            </style>
+          </svg>`;
+      } else {
+        // Default / paused state
+        btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-left:1px;"><polygon points="5 3 19 12 5 21"/></svg>`;
+      }
+    }
+    
   resetTrackVisuals(index) {
-    this.updateButtonUI(index, "▶️");
+    this.updateButtonUI(index, "paused");
     const slider = this.root.querySelector(`.fbc-audio-slider[data-index="${index}"]`);
     const currentSpan = this.root.querySelector(`.fbc-audio-current-time[data-index="${index}"]`);
     const durationSpan = this.root.querySelector(`.fbc-audio-duration[data-index="${index}"]`);
@@ -241,7 +213,6 @@ export class FritzboxVoicemail {
     }
     if (currentSpan) currentSpan.textContent = "0:00";
     
-    // Revert duration string to its initial attribute value saved on data tag
     if (durationSpan) {
       durationSpan.textContent = durationSpan.dataset.initial || "0:00";
     }

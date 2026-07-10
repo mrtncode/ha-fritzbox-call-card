@@ -25,11 +25,11 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	let t = "";
 	for (let n of e.cssRules) t += n.cssText;
 	return a(t);
-})(e) : e, { is: c, defineProperty: l, getOwnPropertyDescriptor: u, getOwnPropertyNames: d, getOwnPropertySymbols: f, getPrototypeOf: ee } = Object, p = globalThis, m = p.trustedTypes, te = m ? m.emptyScript : "", ne = p.reactiveElementPolyfillSupport, h = (e, t) => e, g = {
+})(e) : e, { is: c, defineProperty: l, getOwnPropertyDescriptor: u, getOwnPropertyNames: d, getOwnPropertySymbols: ee, getPrototypeOf: te } = Object, f = globalThis, p = f.trustedTypes, ne = p ? p.emptyScript : "", re = f.reactiveElementPolyfillSupport, m = (e, t) => e, h = {
 	toAttribute(e, t) {
 		switch (t) {
 			case Boolean:
-				e = e ? te : null;
+				e = e ? ne : null;
 				break;
 			case Object:
 			case Array: e = e == null ? e : JSON.stringify(e);
@@ -54,23 +54,23 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 		}
 		return n;
 	}
-}, _ = (e, t) => !c(e, t), v = {
+}, g = (e, t) => !c(e, t), _ = {
 	attribute: !0,
 	type: String,
-	converter: g,
+	converter: h,
 	reflect: !1,
 	useDefault: !1,
-	hasChanged: _
+	hasChanged: g
 };
-Symbol.metadata ??= Symbol("metadata"), p.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var y = class extends HTMLElement {
+Symbol.metadata ??= Symbol("metadata"), f.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
+var v = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
 	static get observedAttributes() {
 		return this.finalize(), this._$Eh && [...this._$Eh.keys()];
 	}
-	static createProperty(e, t = v) {
+	static createProperty(e, t = _) {
 		if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
 			let n = Symbol(), r = this.getPropertyDescriptor(e, n, t);
 			r !== void 0 && l(this.prototype, e, r);
@@ -96,17 +96,17 @@ var y = class extends HTMLElement {
 		};
 	}
 	static getPropertyOptions(e) {
-		return this.elementProperties.get(e) ?? v;
+		return this.elementProperties.get(e) ?? _;
 	}
 	static _$Ei() {
-		if (this.hasOwnProperty(h("elementProperties"))) return;
-		let e = ee(this);
+		if (this.hasOwnProperty(m("elementProperties"))) return;
+		let e = te(this);
 		e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
 	}
 	static finalize() {
-		if (this.hasOwnProperty(h("finalized"))) return;
-		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(h("properties"))) {
-			let e = this.properties, t = [...d(e), ...f(e)];
+		if (this.hasOwnProperty(m("finalized"))) return;
+		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(m("properties"))) {
+			let e = this.properties, t = [...d(e), ...ee(e)];
 			for (let n of t) this.createProperty(n, e[n]);
 		}
 		let e = this[Symbol.metadata];
@@ -167,14 +167,14 @@ var y = class extends HTMLElement {
 	_$ET(e, t) {
 		let n = this.constructor.elementProperties.get(e), r = this.constructor._$Eu(e, n);
 		if (r !== void 0 && !0 === n.reflect) {
-			let i = (n.converter?.toAttribute === void 0 ? g : n.converter).toAttribute(t, n.type);
+			let i = (n.converter?.toAttribute === void 0 ? h : n.converter).toAttribute(t, n.type);
 			this._$Em = e, i == null ? this.removeAttribute(r) : this.setAttribute(r, i), this._$Em = null;
 		}
 	}
 	_$AK(e, t) {
 		let n = this.constructor, r = n._$Eh.get(e);
 		if (r !== void 0 && this._$Em !== r) {
-			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? g : e.converter;
+			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? h : e.converter;
 			this._$Em = r;
 			let a = i.fromAttribute(t, e.type);
 			this[r] = a ?? this._$Ej?.get(r) ?? a, this._$Em = null;
@@ -183,7 +183,7 @@ var y = class extends HTMLElement {
 	requestUpdate(e, t, n, r = !1, i) {
 		if (e !== void 0) {
 			let a = this.constructor;
-			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? _)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
+			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? g)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
 			this.C(e, t, n);
 		}
 		!1 === this.isUpdatePending && (this._$ES = this._$EP());
@@ -247,17 +247,17 @@ var y = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-y.elementStyles = [], y.shadowRootOptions = { mode: "open" }, y[h("elementProperties")] = /* @__PURE__ */ new Map(), y[h("finalized")] = /* @__PURE__ */ new Map(), ne?.({ ReactiveElement: y }), (p.reactiveElementVersions ??= []).push("2.1.2");
+v.elementStyles = [], v.shadowRootOptions = { mode: "open" }, v[m("elementProperties")] = /* @__PURE__ */ new Map(), v[m("finalized")] = /* @__PURE__ */ new Map(), re?.({ ReactiveElement: v }), (f.reactiveElementVersions ??= []).push("2.1.2");
 //#endregion
 //#region node_modules/lit-html/lit-html.js
-var b = globalThis, x = (e) => e, S = b.trustedTypes, C = S ? S.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, w = "$lit$", T = `lit$${Math.random().toFixed(9).slice(2)}$`, E = "?" + T, re = `<${E}>`, D = document, O = () => D.createComment(""), k = (e) => e === null || typeof e != "object" && typeof e != "function", A = Array.isArray, ie = (e) => A(e) || typeof e?.[Symbol.iterator] == "function", j = "[ 	\n\f\r]", M = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, N = /-->/g, P = />/g, F = RegExp(`>|${j}(?:([^\\s"'>=/]+)(${j}*=${j}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), I = /'/g, L = /"/g, R = /^(?:script|style|textarea|title)$/i, z = ((e) => (t, ...n) => ({
+var y = globalThis, b = (e) => e, x = y.trustedTypes, S = x ? x.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, C = "$lit$", w = `lit$${Math.random().toFixed(9).slice(2)}$`, T = "?" + w, E = `<${T}>`, D = document, O = () => D.createComment(""), k = (e) => e === null || typeof e != "object" && typeof e != "function", A = Array.isArray, ie = (e) => A(e) || typeof e?.[Symbol.iterator] == "function", j = "[ 	\n\f\r]", M = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, N = /-->/g, P = />/g, F = RegExp(`>|${j}(?:([^\\s"'>=/]+)(${j}*=${j}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), I = /'/g, L = /"/g, R = /^(?:script|style|textarea|title)$/i, z = ((e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
 }))(1), B = Symbol.for("lit-noChange"), V = Symbol.for("lit-nothing"), H = /* @__PURE__ */ new WeakMap(), U = D.createTreeWalker(D, 129);
 function W(e, t) {
 	if (!A(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
-	return C === void 0 ? t : C.createHTML(t);
+	return S === void 0 ? t : S.createHTML(t);
 }
 var ae = (e, t) => {
 	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = M;
@@ -265,7 +265,7 @@ var ae = (e, t) => {
 		let n = e[t], s, c, l = -1, u = 0;
 		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === M ? c[1] === "!--" ? o = N : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = F) : (R.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = F) : o = P : o === F ? c[0] === ">" ? (o = i ?? M, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? F : c[3] === "\"" ? L : I) : o === L || o === I ? o = F : o === N || o === P ? o = M : (o = F, i = void 0);
 		let d = o === F && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === M ? n + re : l >= 0 ? (r.push(s), n.slice(0, l) + w + n.slice(l) + T + d) : n + T + (l === -2 ? t : d);
+		a += o === M ? n + E : l >= 0 ? (r.push(s), n.slice(0, l) + C + n.slice(l) + w + d) : n + w + (l === -2 ? t : d);
 	}
 	return [W(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
 }, G = class e {
@@ -279,8 +279,8 @@ var ae = (e, t) => {
 		}
 		for (; (i = U.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(w)) {
-					let t = u[o++], n = i.getAttribute(e).split(T), r = /([.?@])?(.*)/.exec(t);
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(C)) {
+					let t = u[o++], n = i.getAttribute(e).split(w), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
@@ -288,14 +288,14 @@ var ae = (e, t) => {
 						strings: n,
 						ctor: r[1] === "." ? oe : r[1] === "?" ? se : r[1] === "@" ? ce : Y
 					}), i.removeAttribute(e);
-				} else e.startsWith(T) && (c.push({
+				} else e.startsWith(w) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
 				if (R.test(i.tagName)) {
-					let e = i.textContent.split(T), t = e.length - 1;
+					let e = i.textContent.split(w), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = S ? S.emptyScript : "";
+						i.textContent = x ? x.emptyScript : "";
 						for (let n = 0; n < t; n++) i.append(e[n], O()), U.nextNode(), c.push({
 							type: 2,
 							index: ++a
@@ -303,16 +303,16 @@ var ae = (e, t) => {
 						i.append(e[t], O());
 					}
 				}
-			} else if (i.nodeType === 8) if (i.data === E) c.push({
+			} else if (i.nodeType === 8) if (i.data === T) c.push({
 				type: 2,
 				index: a
 			});
 			else {
 				let e = -1;
-				for (; (e = i.data.indexOf(T, e + 1)) !== -1;) c.push({
+				for (; (e = i.data.indexOf(w, e + 1)) !== -1;) c.push({
 					type: 7,
 					index: a
-				}), e += T.length - 1;
+				}), e += w.length - 1;
 			}
 			a++;
 		}
@@ -403,8 +403,8 @@ var q = class {
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = x(e).nextSibling;
-			x(e).remove(), e = t;
+			let t = b(e).nextSibling;
+			b(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
@@ -468,8 +468,8 @@ var q = class {
 	_$AI(e) {
 		K(this, e);
 	}
-}, ue = b.litHtmlPolyfillSupport;
-ue?.(G, J), (b.litHtmlVersions ??= []).push("3.3.2");
+}, ue = y.litHtmlPolyfillSupport;
+ue?.(G, J), (y.litHtmlVersions ??= []).push("3.3.2");
 var de = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
@@ -477,7 +477,7 @@ var de = (e, t, n) => {
 		r._$litPart$ = i = new J(t.insertBefore(O(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, X = globalThis, Z = class extends y {
+}, X = globalThis, Z = class extends v {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -504,7 +504,7 @@ var Q = X.litElementPolyfillSupport;
 Q?.({ LitElement: Z }), (X.litElementVersions ??= []).push("4.2.2");
 var $ = {
 	common: {
-		call_history: "📞 Call History",
+		call_history: "Fritz!Box Calls",
 		loading: "Loading call history...",
 		no_calls: "No calls yet",
 		unknown: "Unknown"
@@ -655,7 +655,7 @@ function me(e, t) {
 }
 var he = {
 	common: {
-		call_history: "📞 Anrufverlauf",
+		call_history: "Fritz!Box Anrufe",
 		loading: "Anrufverlauf wird geladen...",
 		no_calls: "Noch keine Anrufe",
 		unknown: "Unbekannt",
@@ -689,102 +689,86 @@ var he = {
 		this.card = e, this.audio = null, this.currentlyPlayingIndex = null, this.root = null;
 	}
 	get entity() {
-		let e = this.card.config?.voicemail_entity;
-		return !e || !this.card._hass ? null : this.card._hass.states[e] || null;
+		return this.card.config?.voicemail_entity && this.card._hass && this.card._hass.states[this.card.config.voicemail_entity] || null;
 	}
 	get messages() {
 		return this.entity?.attributes?.messages || [];
 	}
 	async deleteMessage(e) {
-		try {
+		if (confirm("Are you sure you want to delete this voicemail?")) try {
 			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
 				delete_mode: "specific",
 				message_index: Number(e)
 			});
 		} catch (e) {
-			console.error("Failed to delete voicemail message", e);
+			console.error(e);
 		}
 	}
 	async deleteAll() {
-		try {
+		if (confirm("Are you sure you want to delete ALL voicemails?")) try {
 			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
 		} catch (e) {
-			console.error("Failed to delete all voicemail messages", e);
+			console.error(e);
 		}
 	}
 	render() {
 		return this.messages.length ? `
-      <div class="fbc-voicemail-container">
-        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color: var(--primary-text-color);">
-            🗑 All
+      <div class="fbc-voicemail-container" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--divider-color, #eee); padding-bottom:4px;">
+          <span style="font-size:12px; font-weight:bold; color:var(--secondary-text-color);">Voicemails</span>
+          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color:var(--error-color, #e53935); display:flex; align-items:center; padding:2px; font-size:11px; font-weight:500;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Clear All
           </button>
         </div>
-
-        <ul style="list-style:none; padding:0; margin:0;">
+        <ul style="list-style:none; padding:0; margin:0; max-height:180px; overflow-y:auto;">
           ${this.messages.map((e) => {
 			let t = String(e.Index) === String(this.currentlyPlayingIndex);
 			return `
-            <li style="padding:12px 0; border-bottom:1px solid var(--divider-color); display:flex; flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-                <div>
-                  <strong style="color: var(--primary-text-color);">
-                    ${e.Name || e.Number || "Unknown"}
-                  </strong>
-                  <br>
-                  <small style="color: var(--secondary-text-color);">
-                    ${e.Date || ""}
-                  </small>
-                </div>
-
-                <button class="fbc-voicemail-delete" data-index="${e.Index}" style="border:none; background:none; cursor:pointer; color: var(--error-color); font-size: 1.1em;">
-                  🗑
-                </button>
-              </div>
-
-              ${e.Index === void 0 ? "" : `
-                <div class="fbc-audio-player-row" data-index="${e.Index}" style="display:flex; align-items:center; gap:10px; width:100%; margin-top:4px;">
-                  <button class="fbc-voicemail-toggle" data-index="${e.Index}" style="border:none; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.9em; box-shadow: var(--ha-card-box-shadow, none);">
-                    ${t && !this.audio?.paused ? "⏸" : "▶️"}
+              <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:4px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%; min-width:0;">
+                  <div style="min-width:0; flex-grow:1;">
+                    <strong style="font-size:12px; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.Name || e.Number || "Unknown"}</strong>
+                    <small style="font-size:10px; color:var(--secondary-text-color); display:block;">${e.Date || ""}</small>
+                  </div>
+                  <button class="fbc-voicemail-delete" data-index="${e.Index}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
-                  
-                  <div style="flex-grow:1; display:flex; flex-direction:column; gap:2px;">
-                    <input type="range" class="fbc-audio-slider" data-index="${e.Index}" min="0" max="100" value="0" step="0.1" ${t ? "" : "disabled"} style="width:100%; accent-color: var(--primary-color); cursor: pointer; margin:0;">
-                    <div style="display:flex; justify-content:space-between; font-size:0.75em; color: var(--secondary-text-color); font-family: monospace;">
-                      <span class="fbc-audio-current-time" data-index="${e.Index}">0:00</span>
-                      <!-- Displaying pre-loaded message attribute directly before playback starts -->
-                      <span class="fbc-audio-duration" data-index="${e.Index}" data-initial=""></span>
+                </div>
+                ${e.Index === void 0 ? "" : `
+                  <div class="fbc-audio-player-row" data-index="${e.Index}" style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <button class="fbc-voicemail-toggle" data-index="${e.Index}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
+                      ${t && !this.audio?.paused ? "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"4\" y=\"4\" width=\"4\" height=\"16\"/><rect x=\"16\" y=\"4\" width=\"4\" height=\"16\"/></svg>" : "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\" style=\"margin-left:1px;\"><polygon points=\"5 3 19 12 5 21\"/></svg>"}
+                    </button>
+                    <div style="flex-grow:1; display:flex; flex-direction:column;">
+                      <input type="range" class="fbc-audio-slider" data-index="${e.Index}" min="0" max="100" value="0" step="0.1" ${t ? "" : "disabled"} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
+                      <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
+                        <span class="fbc-audio-current-time" data-index="${e.Index}">0:00</span>
+                        <span class="fbc-audio-duration" data-index="${e.Index}" data-initial=""></span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              `}
-            </li>
-          `;
+                `}
+              </li>
+            `;
 		}).join("")}
         </ul>
       </div>
-    ` : "\n        <div style=\"padding:8px 0; color: var(--secondary-text-color);\">\n          No messages\n        </div>\n      ";
+    ` : "<div style=\"padding:4px 0; font-size:13px; color:var(--secondary-text-color);\">No messages</div>";
 	}
 	attachEvents(e) {
-		this.root = e, e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => {
-			e.onclick = () => this.deleteMessage(e.dataset.index);
-		});
+		this.root = e, e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => e.onclick = () => this.deleteMessage(e.dataset.index));
 		let t = e.querySelector(".fbc-voicemail-delete-all");
-		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-toggle").forEach((e) => {
-			e.onclick = () => this.handlePlayPause(e.dataset.index);
-		}), e.querySelectorAll(".fbc-audio-slider").forEach((e) => {
-			e.oninput = (t) => this.handleSeek(t, e.dataset.index);
-		});
+		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-toggle").forEach((e) => e.onclick = () => this.handlePlayPause(e.dataset.index)), e.querySelectorAll(".fbc-audio-slider").forEach((e) => e.oninput = (t) => this.handleSeek(t, e.dataset.index));
 	}
 	stopCurrentAudio() {
-		this.audio &&= (this.audio.pause(), this.audio.ontimeupdate = null, this.audio.onloadedmetadata = null, this.audio.onended = null, null);
+		this.audio &&= (this.audio.pause(), this.audio.ontimeupdate = this.audio.onloadedmetadata = this.audio.onended = null, null);
 	}
 	async handlePlayPause(e) {
 		if (String(this.currentlyPlayingIndex) === String(e) && this.audio) {
-			this.audio.paused ? (await this.audio.play(), this.updateButtonUI(e, "⏸")) : (this.audio.pause(), this.updateButtonUI(e, "▶️"));
+			this.audio.paused ? (await this.audio.play(), this.updateButtonUI(e, "playing")) : (this.audio.pause(), this.updateButtonUI(e, "paused"));
 			return;
 		}
-		this.currentlyPlayingIndex !== null && this.resetTrackVisuals(this.currentlyPlayingIndex), this.stopCurrentAudio(), this.currentlyPlayingIndex = e, this.updateButtonUI(e, "⏳");
+		this.currentlyPlayingIndex !== null && this.resetTrackVisuals(this.currentlyPlayingIndex), this.stopCurrentAudio(), this.currentlyPlayingIndex = e, this.updateButtonUI(e, "loading");
 		try {
 			let t = `media-source://fritzbox_voicemail/${e}`, n = await this.card._hass.callWS({
 				type: "media_source/resolve_media",
@@ -803,7 +787,7 @@ var he = {
 				this.resetTrackVisuals(e), this.stopCurrentAudio(), this.currentlyPlayingIndex = null;
 			};
 			let i = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`);
-			i && (i.disabled = !1), await this.audio.play(), this.updateButtonUI(e, "⏸");
+			i && (i.disabled = !1), await this.audio.play(), this.updateButtonUI(e, "playing");
 		} catch (t) {
 			console.error("Audio engine failed:", t), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
 		}
@@ -816,10 +800,10 @@ var he = {
 	}
 	updateButtonUI(e, t) {
 		let n = this.root.querySelector(`.fbc-voicemail-toggle[data-index="${e}"]`);
-		n && (n.textContent = t);
+		n && (t === "playing" ? n.innerHTML = "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"4\" y=\"4\" width=\"4\" height=\"16\"/><rect x=\"16\" y=\"4\" width=\"4\" height=\"16\"/></svg>" : t === "loading" ? n.innerHTML = "\n          <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" \n            style=\"animation: fbc-spin 1s linear infinite; transform-origin: center;\">\n            <circle cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-opacity=\"0.25\"></circle>\n            <path d=\"M12 2a10 10 0 0 1 10 10\" stroke=\"currentColor\" stroke-linecap=\"round\"></path>\n            <style>\n              @keyframes fbc-spin {\n                0% { transform: rotate(0deg); }\n                100% { transform: rotate(360deg); }\n              }\n            </style>\n          </svg>" : n.innerHTML = "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\" style=\"margin-left:1px;\"><polygon points=\"5 3 19 12 5 21\"/></svg>");
 	}
 	resetTrackVisuals(e) {
-		this.updateButtonUI(e, "▶️");
+		this.updateButtonUI(e, "paused");
 		let t = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`), n = this.root.querySelector(`.fbc-audio-current-time[data-index="${e}"]`), r = this.root.querySelector(`.fbc-audio-duration[data-index="${e}"]`);
 		t && (t.value = 0, t.disabled = !0), n && (n.textContent = "0:00"), r && (r.textContent = r.dataset.initial || "0:00");
 	}
@@ -842,13 +826,13 @@ var he = {
 			voicemail_entity: null,
 			max_calls: 10,
 			max_hours: 24,
-			title: "📞 Call History"
+			title: "Fritz!Box Calls"
 		};
 	}
 	setConfig(e) {
 		if (!e || !Array.isArray(e.call_entities)) throw Error("Invalid configuration: 'call_entities' must be an array.");
 		this.config = {
-			title: e.title || "📞 Call History",
+			title: e.title || "Fritz!Box Calls",
 			voicemail_entity: e.voicemail_entity || null,
 			max_calls: Number.isInteger(e.max_calls) ? e.max_calls : parseInt(e.max_calls, 10) || 10,
 			max_hours: Number.isFinite(e.max_hours) ? e.max_hours : parseInt(e.max_hours, 10) || 24,
@@ -860,10 +844,7 @@ var he = {
 		let t = !1;
 		this.config.call_entities.forEach((n) => {
 			let r = n?.entity || n, i = e.states[r];
-			if (!i) {
-				console.warn("Entity not found in HA:", r);
-				return;
-			}
+			if (!i) return;
 			let a = this._lastEntityStates[r];
 			(!a || a.state !== i.state || a.last_changed !== i.last_changed) && (t = !0, this._lastEntityStates[r] = {
 				state: i.state,
@@ -876,33 +857,30 @@ var he = {
 	}
 	async _updateHistory() {
 		if (!this._hass || !Array.isArray(this.config.call_entities)) return;
-		let e = /* @__PURE__ */ new Date(), t = /* @__PURE__ */ new Date(e.getTime() - this.config.max_hours * 36e5), n = this.config.call_entities.map((n) => this._fetchEntityHistory(n, t, e)), r = (await Promise.all(n)).flatMap((e, t) => this._buildCallEntries(e, this.config.call_entities[t]));
-		this.calls = this._mergeCallEntries(r), this._loading = !1, this.render();
+		let e = /* @__PURE__ */ new Date(), t = /* @__PURE__ */ new Date(e.getTime() - this.config.max_hours * 36e5), n = (await Promise.all(this.config.call_entities.map((n) => this._fetchEntityHistory(n, t, e)))).flatMap((e, t) => this._buildCallEntries(e, this.config.call_entities[t]));
+		this.calls = this._mergeCallEntries(n), this._loading = !1, this.render();
 	}
 	async _fetchEntityHistory(e, t, n) {
 		let r = e?.entity || e;
 		if (!this._hass || !r) return [];
 		try {
-			let e = `history/period/${t.toISOString()}?filter_entity_id=${r}`;
-			e += `&end_time=${n.toISOString()}`;
-			let i = await this._hass.callApi("GET", e);
-			return Array.isArray(i) && Array.isArray(i[0]) ? i[0] : [];
-		} catch (t) {
-			let n = e?.entity || e;
-			return console.warn("Failed to fetch history for", n, t), [];
+			let e = await this._hass.callApi("GET", `history/period/${t.toISOString()}?filter_entity_id=${r}&end_time=${n.toISOString()}`);
+			return Array.isArray(e) && Array.isArray(e[0]) ? e[0] : [];
+		} catch {
+			return [];
 		}
 	}
 	_buildCallEntries(e, t) {
 		if (!Array.isArray(e)) return [];
 		let n = t?.entity || t, r = [...e].sort((e, t) => new Date(e.last_changed) - new Date(t.last_changed)), i = [];
-		for (let e = 0; e < r.length; e += 1) {
+		for (let e = 0; e < r.length; e++) {
 			let a = r[e];
 			if (![
 				"talking",
 				"dialing",
 				"ringing"
 			].includes(a.state) || a.state === "ringing" && me(r, e)) continue;
-			let o = new Date(a.last_changed), s = this._getHistoryEndTime(r, e, n), c = Math.max(0, s - o);
+			let o = new Date(a.last_changed), s = this._getHistoryEndTime(r, e, n);
 			i.push({
 				id: `${n}-${a.state}-${a.last_changed || a.last_updated || ""}`,
 				number: this._extractNumber(a, t),
@@ -911,7 +889,7 @@ var he = {
 				state: a.state,
 				type: a.attributes?.type || "",
 				time: a.state === "talking" ? a.attributes?.accepted ? new Date(a.attributes.accepted) : o : a.state === "dialing" && a.attributes?.initiated ? new Date(a.attributes.initiated) : o,
-				duration: pe(c)
+				duration: pe(Math.max(0, s - o))
 			});
 		}
 		return i;
@@ -924,7 +902,7 @@ var he = {
 	}
 	_getHistoryEndTime(e, t, n) {
 		let r = e[t];
-		for (let n = t + 1; n < e.length; n += 1) if (e[n].state !== r.state) return new Date(e[n].last_changed || e[n].last_updated || Date.now());
+		for (let n = t + 1; n < e.length; n++) if (e[n].state !== r.state) return new Date(e[n].last_changed || e[n].last_updated || Date.now());
 		let i = this._hass?.states?.[n];
 		return i && ![
 			"talking",
@@ -949,26 +927,22 @@ var he = {
 		for (let t of r) {
 			if (!t) continue;
 			let r = t === "friendly_name" ? e.attributes?.friendly_name : n[t];
-			if (typeof r == "string" && r.trim()) {
-				let e = r.trim();
-				if (e.toLowerCase() === "unknown") continue;
-				return e;
-			}
+			if (typeof r == "string" && r.trim() && r.trim().toLowerCase() !== "unknown") return r.trim();
 		}
 		return e.entity_id;
 	}
 	_extractLabel(e, t) {
-		let n = e.attributes || {}, r = n.with_name, i = n.with, a = n.to_name, o = n.to, s = n.from, c = (n.type || "").toLowerCase(), l = r && r.toLowerCase() !== "unknown" ? r : i, u = a && a.toLowerCase() !== "unknown" ? a : o, d = this._localize(`state.${e.state}`) || e.state;
-		return e.state === "dialing" ? d = c === "outgoing" || u ? this._formatTranslation(this._localize("call.outgoing_to"), { name: u || s || this._localize("common.unknown") }) : this._formatTranslation(this._localize("call.incoming_from"), { name: s || this._localize("common.unknown") }) : e.state === "ringing" ? d = l ? this._formatTranslation(this._localize("call.missed_from"), { name: l }) : this._localize("call.missed_call") : e.state === "talking" && (d = c === "outgoing" || u ? this._formatTranslation(this._localize("call.outgoing_to"), { name: u || l || this._localize("common.unknown") }) : this._formatTranslation(this._localize("call.incoming_from"), { name: l || s || this._localize("common.unknown") })), (!d || typeof d != "string" || !d.trim()) && (d = t?.label || n.call_type || n.direction || n.source || n.destination || this._localize(`state.${e.state}`) || e.state), d.trim();
+		let n = e.attributes || {}, r = (n.type || "").toLowerCase(), i = n.with_name && n.with_name.toLowerCase() !== "unknown" ? n.with_name : n.with, a = n.to_name && n.to_name.toLowerCase() !== "unknown" ? n.to_name : n.to, o = this._localize(`state.${e.state}`) || e.state;
+		return e.state === "dialing" ? o = this._formatTranslation(this._localize(r === "outgoing" || a ? "call.outgoing_to" : "call.incoming_from"), { name: a || n.from || this._localize("common.unknown") }) : e.state === "ringing" ? o = i ? this._formatTranslation(this._localize("call.missed_from"), { name: i }) : this._localize("call.missed_call") : e.state === "talking" && (o = this._formatTranslation(this._localize(r === "outgoing" || a ? "call.outgoing_to" : "call.incoming_from"), { name: r === "outgoing" || a ? a || i : i || n.from || this._localize("common.unknown") })), (o || t?.label || n.call_type || n.direction || n.source || n.destination || e.state).trim();
 	}
 	_formatTranslation(e, t = {}) {
 		return typeof e == "string" ? e.replace(/\{(\w+)\}/g, (e, n) => t[n] === void 0 ? `{${n}}` : t[n]) : e;
 	}
 	_iconForCall(e) {
-		let t = e.state === "ringing", n = e.type === "outgoing" || e.state === "dialing", r = t ? "#e53935" : n ? "#1e88e5" : "#43a047";
+		let t = e.state === "ringing", n = e.type === "outgoing" || e.state === "dialing";
 		return `
-      <svg width="21" height="21" viewBox="0 0 24 24" aria-label="${t ? this._localize("call.missed") || "Missed" : n ? this._localize("call.outgoing") || "Outgoing" : this._localize("call.incoming") || "Incoming"}" role="img" style="vertical-align:middle; margin-right:8px;">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.73 3.03a2 2 0 0 1-.45 2.11L8.91 10.91a16 16 0 0 0 6 6l1.05-1.05a2 2 0 0 1 2.11-.45c.96.36 1.98.61 3.03.73A2 2 0 0 1 22 16.92z" fill="none" stroke="${r}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${t ? "var(--error-color, #e53935)" : n ? "var(--primary-color, #1e88e5)" : "var(--success-color, #43a047)"}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:12px; flex-shrink:0;">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.72c.12 1.05.37 2.07.73 3.03a2 2 0 0 1-.45 2.11L8.91 10.91a16 16 0 0 0 6 6l1.05-1.05a2 2 0 0 1 2.11-.45c.96.36 1.98.61 3.03.73A2 2 0 0 1 22 16.92z"/>
       </svg>
     `;
 	}
@@ -976,65 +950,48 @@ var he = {
 		this._filter !== e && (this._filter = e, this.render());
 	}
 	_localize(e, t = this._hass?.locale?.language || "en") {
-		console.log("hass lang", this._hass?.locale?.language);
-		let n = t.split("-")[0], r = e.split("."), i = this.langs[n];
-		i ||= this.langs.en;
-		for (let e of r) {
-			if (i[e] === void 0) return r[0] === "weather_state" ? r[1] : this.langs.en[r[0]][r[1]];
-			i = i[e];
+		let n = t.split("-")[0], r = this.langs[n] || this.langs.en;
+		for (let t of e.split(".")) {
+			if (!r || r[t] === void 0) return e.split(".")[0] === "weather_state" ? e.split(".")[1] : this.langs.en?.[e.split(".")[0]]?.[e.split(".")[1]] || e;
+			r = r[t];
 		}
-		return i;
+		return r;
 	}
 	render() {
-		let e = this.config?.title || this._localize("common.call_history");
-		console.log("voicemail", this.config?.voicemail_entity);
-		let t = this.config?.voicemail_entity ? `
-          <div style="">
-            ${this.voicemail.render()}
-          </div>
-        ` : "", n = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), r = "padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;", i = "box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);", a = r + (this._filter === "all" ? i : ""), o = r + (this._filter === "missed" ? "border-color:#e0b4b4;" + i : ""), s = r + (this._filter === "outgoing" ? "border-color:#9fc8f8;" + i : ""), c = r + (this._filter === "incoming" ? "border-color:#bfe8c7;" + i : ""), l = `
-      <div style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
-        <button class="fbc-chip" data-filter="all" style="${a}">${this._localize("common.all") || "All"}</button>
-        <button class="fbc-chip" data-filter="missed" style="${o}">${this._localize("call.missed") || "Missed"}</button>
-        <button class="fbc-chip" data-filter="outgoing" style="${s}">${this._localize("call.outgoing") || "Outgoing"}</button>
-        <button class="fbc-chip" data-filter="incoming" style="${c}">${this._localize("call.incoming") || "Incoming"}</button>
-      </div>
-    `;
+		let e = this.config?.title || this._localize("common.call_history"), t = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), n = "padding:4px 10px; border-radius:12px; border:1px solid var(--divider-color, #ddd); background:var(--card-background-color, #fff); color:var(--primary-text-color); cursor:pointer; font-size:11px; font-weight:500; transition: all 0.2s;", r = "background:var(--primary-color, #1e88e5); color:#fff; border-color:var(--primary-color, #1e88e5);";
 		if (this._loading) {
-			this.innerHTML = `
-        <ha-card header="${e}">
-          <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
-            <div>${this._localize("common.loading") || "Loading..."}</div>
-          </div>
-        </ha-card>
-      `;
+			this.innerHTML = `<ha-card header="${e}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); font-size:13px;">${this._localize("common.loading") || "Loading..."}</div></ha-card>`;
 			return;
 		}
-		let u = `
-      ${t}
-
-      ${l}
-
-          ${n.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : ""}
-          <ul style="list-style: none; padding: 0; margin: 0;">
-            ${n.map((e) => `
-              <li style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center;">
+		this.innerHTML = `
+      <ha-card header="${e}">
+        <div style="padding:0 16px 12px 16px; display:flex; flex-direction:column; gap:8px;">
+          ${this.config?.voicemail_entity ? `<div>${this.voicemail.render()}</div>` : ""}
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="fbc-chip" data-filter="all" style="${n} ${this._filter === "all" ? r : ""}">${this._localize("common.all") || "All"}</button>
+            <button class="fbc-chip" data-filter="missed" style="${n} ${this._filter === "missed" ? r : ""}">${this._localize("call.missed") || "Missed"}</button>
+            <button class="fbc-chip" data-filter="outgoing" style="${n} ${this._filter === "outgoing" ? r : ""}">${this._localize("call.outgoing") || "Outgoing"}</button>
+            <button class="fbc-chip" data-filter="incoming" style="${n} ${this._filter === "incoming" ? r : ""}">${this._localize("call.incoming") || "Incoming"}</button>
+          </div>
+          ${t.length === 0 ? `<div style="padding:8px 0; color:var(--secondary-text-color); font-size:13px;">${this._localize("common.no_calls")}</div>` : ""}
+          <ul style="list-style:none; padding:0; margin:0;">
+            ${t.map((e) => `
+              <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; align-items:center;">
                 ${this._iconForCall(e)}
-                <div style="">
-                  <strong style="display: block; margin-bottom: 4px;">${e.headline || this._localize("common.unknown")}</strong>
-                  <small style="display:block;">${e.label} · ${e.time.toLocaleTimeString()} · ${e.duration}</small>
+                <div style="flex-grow:1; min-width:0;">
+                  <strong style="display:block; font-size:13px; color:var(--primary-text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.headline || this._localize("common.unknown")}</strong>
+                  <small style="display:block; font-size:11px; color:var(--secondary-text-color); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.label} · ${e.time.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit"
+		})} · ${e.duration}</small>
                 </div>
               </li>
             `).join("")}
-          </ul>`;
-		this.innerHTML = `
-      <ha-card header="${e}">
-        <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
-          ${u}
+          </ul>
         </div>
       </ha-card>
     `, this.querySelectorAll(".fbc-chip").forEach((e) => {
-			e.removeEventListener("click", e._fbcClick), e._fbcClick = (e) => this._setFilter(e.currentTarget.dataset.filter), e.addEventListener("click", e._fbcClick);
+			e.onclick = (e) => this._setFilter(e.currentTarget.dataset.filter);
 		}), this.voicemail && this.voicemail.attachEvents(this);
 	}
 };

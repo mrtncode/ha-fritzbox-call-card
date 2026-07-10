@@ -1,6 +1,6 @@
 {
   "common": {
-    "call_history": "📞 Call History",
+    "call_history": "Fritz!Box Calls",
     "loading": "Loading call history...",
     "no_calls": "No calls yet",
     "unknown": "Unknown"
