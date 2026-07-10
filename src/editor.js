@@ -49,13 +49,27 @@ class FritzboxCallCardEditor extends LitElement {
           selector: {
             entity: {
               multiple: true,
+              filter: [
+                {
+                  domain: ["sensor"],
+                  integration: "fritzbox_callmonitor" 
+                }
+              ]
             },
           },
         },
         {
           name: "voicemail_entity",
           selector: {
-            entity: {},
+            entity: {
+              multiple: false,
+              filter: [
+                {
+                  domain: ["sensor"],
+                  integration: "fritzbox_voicemail"
+                }
+              ]
+            },
           },
         },
         {
@@ -89,6 +103,7 @@ class FritzboxCallCardEditor extends LitElement {
     const keys = {
       title: "editor.title",
       call_entities: "editor.call_entities",
+      voicemail_entity: "editor.voicemail_entity",
       device: "editor.device",
       language: "editor.language",
       max_calls: "editor.max_calls",

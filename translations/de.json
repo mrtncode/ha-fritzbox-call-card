@@ -23,7 +23,8 @@
   },
   "editor": {
     "title": "Titel",
-    "call_entities": "Entitäten",
+    "call_entities": "Telefonbuch-Entitäten",
+    "voicemail_entity": "Voicemail Entität (optional)",
     "language": "Sprache",
     "max_calls": "Max. Anrufe",
     "max_hours": "Max. Stunden"

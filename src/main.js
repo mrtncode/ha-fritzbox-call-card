@@ -368,10 +368,7 @@ class FritzboxCallCard extends HTMLElement {
     console.log("voicemail", this.config?.voicemail_entity)
     const voicemailHtml = this.config?.voicemail_entity
       ? `
-          <div style="margin-top:20px;">
-            <h3 style="margin:0 0 10px;">
-              Voicemail
-            </h3>
+          <div style="">
             ${this.voicemail.render()}
           </div>
         `
@@ -404,10 +401,21 @@ class FritzboxCallCard extends HTMLElement {
       </div>
     `;
 
-    const body = this._loading
-      ? `<div>${this._localize('common.loading')}</div>`
-      : `${chipsHtml}
-        ${voicemailHtml}
+    if (this._loading) {
+      this.innerHTML = `
+        <ha-card header="${title}">
+          <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
+            <div>${this._localize('common.loading') || 'Loading...'}</div>
+          </div>
+        </ha-card>
+      `;
+      return;
+    }
+
+    const body = `
+      ${voicemailHtml}
+
+      ${chipsHtml}
 
           ${filteredCalls.length === 0 ? `<div>${this._localize('common.no_calls')}</div>` : ''}
           <ul style="list-style: none; padding: 0; margin: 0;">

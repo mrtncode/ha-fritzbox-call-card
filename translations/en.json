@@ -22,7 +22,8 @@
   },
   "editor": {
     "title": "Title",
-    "call_entities": "call_entities",
+    "call_entities": "Call log entities",
+    "voicemail_entity": "Voicemail entity (optional)",
     "language": "Language",
     "max_calls": "Max calls",
     "max_hours": "Max hours"

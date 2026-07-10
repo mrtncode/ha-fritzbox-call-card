@@ -526,7 +526,8 @@ var $ = {
 	},
 	editor: {
 		title: "Title",
-		call_entities: "call_entities",
+		call_entities: "Call log entities",
+		voicemail_entity: "Voicemail entity (optional)",
 		language: "Language",
 		max_calls: "Max calls",
 		max_hours: "Max hours"
@@ -563,11 +564,23 @@ var $ = {
 			},
 			{
 				name: "call_entities",
-				selector: { entity: { multiple: !0 } }
+				selector: { entity: {
+					multiple: !0,
+					filter: [{
+						domain: ["sensor"],
+						integration: "fritzbox_callmonitor"
+					}]
+				} }
 			},
 			{
 				name: "voicemail_entity",
-				selector: { entity: {} }
+				selector: { entity: {
+					multiple: !1,
+					filter: [{
+						domain: ["sensor"],
+						integration: "fritzbox_voicemail"
+					}]
+				} }
 			},
 			{
 				name: "max_calls",
@@ -591,6 +604,7 @@ var $ = {
 		let n = this._config?.language || this.hass?.locale?.language || "en", r = {
 			title: "editor.title",
 			call_entities: "editor.call_entities",
+			voicemail_entity: "editor.voicemail_entity",
 			device: "editor.device",
 			language: "editor.language",
 			max_calls: "editor.max_calls",
@@ -664,7 +678,8 @@ var he = {
 	},
 	editor: {
 		title: "Titel",
-		call_entities: "Entitäten",
+		call_entities: "Telefonbuch-Entitäten",
+		voicemail_entity: "Voicemail Entität (optional)",
 		language: "Sprache",
 		max_calls: "Max. Anrufe",
 		max_hours: "Max. Stunden"
@@ -974,10 +989,7 @@ var he = {
 		let e = this.config?.title || this._localize("common.call_history");
 		console.log("voicemail", this.config?.voicemail_entity);
 		let t = this.config?.voicemail_entity ? `
-          <div style="margin-top:20px;">
-            <h3 style="margin:0 0 10px;">
-              Voicemail
-            </h3>
+          <div style="">
             ${this.voicemail.render()}
           </div>
         ` : "", n = this._filter === "all" ? this.calls : this.calls.filter((e) => this._filter === "missed" ? e.state === "ringing" : this._filter === "outgoing" ? e.type === "outgoing" || e.state === "dialing" : this._filter === "incoming" ? !(e.type === "outgoing" || e.state === "dialing") && e.state !== "ringing" : !0), r = "padding:6px 10px; border-radius:16px; border:2px solid #ddd; background:#fff; cursor:pointer; font-size:12px;", i = "box-shadow:inset 0 0 0 2px rgba(0,0,0,0.04);", a = r + (this._filter === "all" ? i : ""), o = r + (this._filter === "missed" ? "border-color:#e0b4b4;" + i : ""), s = r + (this._filter === "outgoing" ? "border-color:#9fc8f8;" + i : ""), c = r + (this._filter === "incoming" ? "border-color:#bfe8c7;" + i : ""), l = `
@@ -987,8 +999,21 @@ var he = {
         <button class="fbc-chip" data-filter="outgoing" style="${s}">${this._localize("call.outgoing") || "Outgoing"}</button>
         <button class="fbc-chip" data-filter="incoming" style="${c}">${this._localize("call.incoming") || "Incoming"}</button>
       </div>
-    `, u = this._loading ? `<div>${this._localize("common.loading")}</div>` : `${l}
-        ${t}
+    `;
+		if (this._loading) {
+			this.innerHTML = `
+        <ha-card header="${e}">
+          <div style="padding: 12px; padding-top: 0px; min-height: 120px;">
+            <div>${this._localize("common.loading") || "Loading..."}</div>
+          </div>
+        </ha-card>
+      `;
+			return;
+		}
+		let u = `
+      ${t}
+
+      ${l}
 
           ${n.length === 0 ? `<div>${this._localize("common.no_calls")}</div>` : ""}
           <ul style="list-style: none; padding: 0; margin: 0;">
