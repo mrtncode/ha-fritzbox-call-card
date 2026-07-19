@@ -3,7 +3,8 @@
     "call_history": "Fritz!Box Calls",
     "loading": "Loading call history...",
     "no_calls": "No calls yet",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "all": "All"
   },
   "call": {
     "incoming_from": "Incoming call from {name}",
