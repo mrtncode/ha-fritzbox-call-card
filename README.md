@@ -1,5 +1,5 @@
 
-[![HACS validation](https://img.shields.io/github/actions/workflow/status/mrtncode/ha-fritzbox-call-card/validate.yml?label=HACS%20Validation)](https://github.com/mrtncode/ha-fritzbox-call-card/actions?query=workflow%3Avalidate)
+[![HACS validation](https://img.shields.io/github/actions/workflow/status/mrtncode/ha-fritzbox-call-card/hacs-validation.yml?label=HACS%20Validation)](https://github.com/mrtncode/ha-fritzbox-call-card/actions?query=workflow%3Avalidate)
 ![Downloads](https://img.shields.io/github/downloads/mrtncode/ha-fritzbox-call-card/total?label=Downloads&color=blue) 
 [![GitHub release](https://img.shields.io/github/release/mrtncode/ha-fritzbox-call-card?include_prereleases=&sort=semver&color=blue)](https://github.com/mrtncode/ha-fritzbox-call-card/releases/)
 ![stars](https://img.shields.io/github/stars/mrtncode/ha-fritzbox-call-card)
@@ -7,11 +7,14 @@
 ---
 
 
-# Fritz!Box Calls history Card
+# Fritz!Box Call Card - Cals history + voicemail
 Custom dashboard card for the Home Assistant [Fritz!Box Callmonitor integration](<https://www.home-assistant.io/integrations/fritzbox_callmonitor/)>)
 
 The card shows automatically the call history from the Fritz!Box Callmonitor. No automations or similar needed. The card fetches the data directly from the HA history.
 Translations available for English and German. Other translations may follow :)
+
+<img width="296" height="410" alt="Screenshot" src="https://github.com/user-attachments/assets/ee252a3f-f748-4e87-a0f2-76f5360b1df8" />
+
 
 ## Features
 - ### Automatically fetch the calls history
