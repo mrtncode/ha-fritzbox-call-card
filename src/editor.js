@@ -1,5 +1,7 @@
 import { LitElement, html, css } from "lit";
 import en from "../translations/en.json";
+import de from '../translations/de.json';
+
 
 class FritzboxCallCardEditor extends LitElement {
   static properties = {
@@ -7,7 +9,7 @@ class FritzboxCallCardEditor extends LitElement {
     _config: {},
   };
 
-  static langs = { en };
+  static langs = { en, de };
 
   static styles = css`
     .integration-info {
