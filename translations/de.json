@@ -27,6 +27,11 @@
     "voicemail_entity": "Voicemail Entität (optional)",
     "language": "Sprache",
     "max_calls": "Max. Anrufe",
-    "max_hours": "Max. Stunden"
+    "max_hours": "Max. Stunden",
+    "info": {
+      "header": "Benötigte Integrationen:",
+      "call_entities": "<strong>Anruf-Entitäten:</strong> <a href=\"https://www.home-assistant.io/integrations/fritzbox_callmonitor/\" target=\"_blank\" rel=\"noreferrer\">FRITZ!Box Call Monitor (Core)</a>",
+      "voicemail_entity": "<strong>Anrufbeantworter-Entität:</strong> <a href=\"https://github.com/mrtncode/ha-fritzbox-voicemail\" target=\"_blank\" rel=\"noreferrer\">FRITZ!Box Voicemail (GitHub)</a> — oder direkt <a href=\"https://my.home-assistant.io/redirect/hacs_repository/?repository=ha-fritzbox-voicemail&owner=mrtncode&category=integration\" target=\"_blank\" rel=\"noreferrer\">in HACS öffnen</a>"
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, css } from "lit";
 import en from "../translations/en.json";
 
 class FritzboxCallCardEditor extends LitElement {
@@ -8,6 +8,26 @@ class FritzboxCallCardEditor extends LitElement {
   };
 
   static langs = { en };
+
+  static styles = css`
+    .integration-info {
+      background: var(--secondary-background-color, #f5f5f5);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      border-left: 4px solid var(--primary-color, #03a9f4);
+    }
+    .integration-info a {
+      color: var(--primary-color, #03a9f4);
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .integration-info a:hover {
+      text-decoration: underline;
+    }
+  `;
 
   setConfig(config) {
     this._config = {
@@ -52,9 +72,9 @@ class FritzboxCallCardEditor extends LitElement {
               filter: [
                 {
                   domain: ["sensor"],
-                  integration: "fritzbox_callmonitor" 
-                }
-              ]
+                  integration: "fritzbox_callmonitor",
+                },
+              ],
             },
           },
         },
@@ -66,9 +86,9 @@ class FritzboxCallCardEditor extends LitElement {
               filter: [
                 {
                   domain: ["sensor"],
-                  integration: "fritzbox_voicemail"
-                }
-              ]
+                  integration: "fritzbox_voicemail",
+                },
+              ],
             },
           },
         },
@@ -120,7 +140,21 @@ class FritzboxCallCardEditor extends LitElement {
       return html``;
     }
 
+    const language = this._config?.language || this.hass?.locale?.language || "en";
+
+    const loc = (key) => FritzboxCallCardEditor._localize(key, language);
+
     return html`
+    <!-- Custom HTML to show integration infos -->
+      <div class="integration-info">
+        <strong>${loc("editor.info.header")}</strong>
+        <ul>
+          <li .innerHTML=${loc("editor.info.call_entities")}></li>
+          <li .innerHTML=${loc("editor.info.voicemail_entity")}></li>
+        </ul>
+      </div>
+
+      <!-- HA native form -->
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
@@ -151,11 +185,12 @@ customElements.define(
 
 window.customCards = window.customCards || [];
 
+
 window.customCards.push({
   type: "fritzbox-call-card",
-  name: "Fritzbox Call Card",
-  preview: false,
+  name: "FRITZ!Box Call Card",
+  preview: true,
   description: "Fritzbox call card editor",
   documentationURL:
-    "https://developers.home-assistant.io/docs/frontend/custom-ui/custom-card",
+    "https://github.com/mrtncode/ha-fritzbox-call-card",
 });
