@@ -36,6 +36,7 @@ class FritzboxCallCardEditor extends LitElement {
       title: "",
       call_entities: [],
       voicemail_entity: "",
+      font_size: null,
       max_calls: 10,
       max_hours: 24,
       ...config,
@@ -105,6 +106,16 @@ class FritzboxCallCardEditor extends LitElement {
           },
         },
         {
+          name: "font_size",
+          selector: {
+            number: {
+              min: 10,
+              max: 24,
+              step: 1,
+            },
+          },
+        },
+        {
           name: "max_hours",
           selector: {
             number: {
@@ -129,6 +140,7 @@ class FritzboxCallCardEditor extends LitElement {
       device: "editor.device",
       language: "editor.language",
       max_calls: "editor.max_calls",
+      font_size: "editor.font_size",
       max_hours: "editor.max_hours",
     };
 

@@ -27,6 +27,7 @@
     "voicemail_entity": "Voicemail Entität (optional)",
     "language": "Sprache",
     "max_calls": "Max. Anrufe",
+    "font_size": "Schriftgröße (optional)",
     "max_hours": "Max. Stunden",
     "info": {
       "header": "Benötigte Integrationen:",

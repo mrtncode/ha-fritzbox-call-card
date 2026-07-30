@@ -34,13 +34,16 @@ export class FritzboxVoicemail {
     }
   }
 
-  render() {
-    if (!this.messages.length) return `<div style="padding:4px 0; font-size:13px; color:var(--secondary-text-color);">No messages</div>`;
+  render(baseFontSize = 13) {
+    const base = Number.isFinite(baseFontSize) ? baseFontSize : 13;
+    const scaledText = (multiplier, min = 9) => `${Math.max(min, Math.round(base * multiplier))}px`;
+
+    if (!this.messages.length) return `<div style="padding:4px 0; font-size:${scaledText(1)}; color:var(--secondary-text-color);">No messages</div>`;
     return `
       <div class="fbc-voicemail-container" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--divider-color, #eee); padding-bottom:4px;">
-          <span style="font-size:12px; font-weight:bold; color:var(--secondary-text-color);">Voicemails</span>
-          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color:var(--error-color, #e53935); display:flex; align-items:center; padding:2px; font-size:11px; font-weight:500;">
+          <span style="font-size:${scaledText(0.92)}; font-weight:bold; color:var(--secondary-text-color);">Voicemails</span>
+          <button class="fbc-voicemail-delete-all" style="border:none; background:none; cursor:pointer; color:var(--error-color, #e53935); display:flex; align-items:center; padding:2px; font-size:${scaledText(0.85)}; font-weight:500;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>Clear All
           </button>
         </div>
@@ -51,8 +54,8 @@ export class FritzboxVoicemail {
               <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; width:100%; min-width:0;">
                   <div style="min-width:0; flex-grow:1;">
-                    <strong style="font-size:12px; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.Name || msg.Number || "Unknown"}</strong>
-                    <small style="font-size:10px; color:var(--secondary-text-color); display:block;">${msg.Date || ""}</small>
+                    <strong style="font-size:${scaledText(0.92)}; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.Name || msg.Number || "Unknown"}</strong>
+                    <small style="font-size:${scaledText(0.77)}; color:var(--secondary-text-color); display:block;">${msg.Date || ""}</small>
                   </div>
                   <button class="fbc-voicemail-delete" data-index="${msg.Index}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -68,7 +71,7 @@ export class FritzboxVoicemail {
                     </button>
                     <div style="flex-grow:1; display:flex; flex-direction:column;">
                       <input type="range" class="fbc-audio-slider" data-index="${msg.Index}" min="0" max="100" value="0" step="0.1" ${!isCur ? "disabled" : ""} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
-                      <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
+                      <div style="display:flex; justify-content:space-between; font-size:${scaledText(0.69)}; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
                         <span class="fbc-audio-current-time" data-index="${msg.Index}">0:00</span>
                         <span class="fbc-audio-duration" data-index="${msg.Index}" data-initial=""></span>
                       </div>
