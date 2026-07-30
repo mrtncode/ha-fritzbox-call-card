@@ -139,21 +139,38 @@ class FritzboxCallCard extends HTMLElement {
 
   _extractNumber(state, entityConfig) {
     const attrs = state.attributes || {};
-    const keys = [entityConfig?.number_attribute, 'with_name', 'to_name', 'with', 'to', 'from', 'caller_id', 'called_number', 'number', 'from_number', 'to_number'];
+    const incomeKeys = ['from_name', 'from', 'with_name', 'to', 'from', 'caller_id', 'called_number', 'number', 'from_number', 'to_number'];
+    const outgoKeys = ['to_name', 'with_name', 'with', 'to', 'from', 'caller_id', 'called_number', 'number', 'from_number', 'to_number'];
+    const keys = state.state === 'ringing' ? incomeKeys : outgoKeys;
     for (const k of keys) {
       if (!k) continue;
-      const val = k === 'friendly_name' ? state.attributes?.friendly_name : attrs[k];
+      const val = attrs[k];
       if (typeof val === 'string' && val.trim() && val.trim().toLowerCase() !== 'unknown') return val.trim();
     }
     return state.entity_id;
   }
 
   _extractLabel(state, entityConfig) {
-    const attrs = state.attributes || {};
-    const type = (attrs.type || '').toLowerCase();
-    const caller = attrs.with_name && attrs.with_name.toLowerCase() !== 'unknown' ? attrs.with_name : attrs.with;
-    const target = attrs.to_name && attrs.to_name.toLowerCase() !== 'unknown' ? attrs.to_name : attrs.to;
-    let label = this._localize(`state.${state.state}`) || state.state;
+  const { attributes: attrs = {}, state: currentState } = state || {};
+
+  const type = String(attrs.type || '').toLowerCase();
+
+    const hasValidName = (val) =>
+      typeof val === 'string' &&
+      val.trim() !== '' &&
+      val.toLowerCase() !== 'unknown';
+
+    const caller = hasValidName(attrs.from_name)
+      ? attrs.from_name
+      : hasValidName(attrs.with_name)
+      ? attrs.with_name
+      : attrs.from || attrs.with;
+
+    const isKnownTarget = attrs.to_name && attrs.to_name.toLowerCase() !== 'unknown';
+    const target = isKnownTarget ? attrs.to_name : attrs.to;
+
+    const localizedState = this._localize(`state.${currentState}`);
+    let label = localizedState ?? currentState;
 
     if (state.state === 'dialing') {
       label = this._formatTranslation(this._localize(type === 'outgoing' || target ? 'call.outgoing_to' : 'call.incoming_from'), { name: target || attrs.from || this._localize('common.unknown') });

@@ -962,10 +962,20 @@ var _e = class {
 		].includes(i.state) ? new Date(i.last_changed || i.last_updated || Date.now()) : /* @__PURE__ */ new Date();
 	}
 	_extractNumber(e, t) {
-		let n = e.attributes || {}, r = [
-			t?.number_attribute,
+		let n = e.attributes || {}, r = e.state === "ringing" ? [
+			"from_name",
+			"from",
 			"with_name",
+			"to",
+			"from",
+			"caller_id",
+			"called_number",
+			"number",
+			"from_number",
+			"to_number"
+		] : [
 			"to_name",
+			"with_name",
 			"with",
 			"to",
 			"from",
@@ -975,16 +985,16 @@ var _e = class {
 			"from_number",
 			"to_number"
 		];
-		for (let t of r) {
-			if (!t) continue;
-			let r = t === "friendly_name" ? e.attributes?.friendly_name : n[t];
-			if (typeof r == "string" && r.trim() && r.trim().toLowerCase() !== "unknown") return r.trim();
+		for (let e of r) {
+			if (!e) continue;
+			let t = n[e];
+			if (typeof t == "string" && t.trim() && t.trim().toLowerCase() !== "unknown") return t.trim();
 		}
 		return e.entity_id;
 	}
 	_extractLabel(e, t) {
-		let n = e.attributes || {}, r = (n.type || "").toLowerCase(), i = n.with_name && n.with_name.toLowerCase() !== "unknown" ? n.with_name : n.with, a = n.to_name && n.to_name.toLowerCase() !== "unknown" ? n.to_name : n.to, o = this._localize(`state.${e.state}`) || e.state;
-		return e.state === "dialing" ? o = this._formatTranslation(this._localize(r === "outgoing" || a ? "call.outgoing_to" : "call.incoming_from"), { name: a || n.from || this._localize("common.unknown") }) : e.state === "ringing" ? o = i ? this._formatTranslation(this._localize("call.missed_from"), { name: i }) : this._localize("call.missed_call") : e.state === "talking" && (o = this._formatTranslation(this._localize(r === "outgoing" || a ? "call.outgoing_to" : "call.incoming_from"), { name: r === "outgoing" || a ? a || i : i || n.from || this._localize("common.unknown") })), (o || t?.label || n.call_type || n.direction || n.source || n.destination || e.state).trim();
+		let { attributes: n = {}, state: r } = e || {}, i = String(n.type || "").toLowerCase(), a = (e) => typeof e == "string" && e.trim() !== "" && e.toLowerCase() !== "unknown", o = a(n.from_name) ? n.from_name : a(n.with_name) ? n.with_name : n.from || n.with, s = n.to_name && n.to_name.toLowerCase() !== "unknown" ? n.to_name : n.to, c = this._localize(`state.${r}`) ?? r;
+		return e.state === "dialing" ? c = this._formatTranslation(this._localize(i === "outgoing" || s ? "call.outgoing_to" : "call.incoming_from"), { name: s || n.from || this._localize("common.unknown") }) : e.state === "ringing" ? c = o ? this._formatTranslation(this._localize("call.missed_from"), { name: o }) : this._localize("call.missed_call") : e.state === "talking" && (c = this._formatTranslation(this._localize(i === "outgoing" || s ? "call.outgoing_to" : "call.incoming_from"), { name: i === "outgoing" || s ? s || o : o || n.from || this._localize("common.unknown") })), (c || t?.label || n.call_type || n.direction || n.source || n.destination || e.state).trim();
 	}
 	_formatTranslation(e, t = {}) {
 		return typeof e == "string" ? e.replace(/\{(\w+)\}/g, (e, n) => t[n] === void 0 ? `{${n}}` : t[n]) : e;
