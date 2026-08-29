@@ -35,7 +35,7 @@ class FritzboxCallCardEditor extends LitElement {
     this._config = {
       title: "",
       call_entities: [],
-      voicemail_entity: "",
+      voicemail_entities: [],
       font_size: null,
       max_calls: 10,
       max_hours: 24,
@@ -82,10 +82,10 @@ class FritzboxCallCardEditor extends LitElement {
           },
         },
         {
-          name: "voicemail_entity",
+          name: "voicemail_entities",
           selector: {
             entity: {
-              multiple: false,
+              multiple: true,
               filter: [
                 {
                   domain: ["sensor"],
@@ -136,7 +136,7 @@ class FritzboxCallCardEditor extends LitElement {
     const keys = {
       title: "editor.title",
       call_entities: "editor.call_entities",
-      voicemail_entity: "editor.voicemail_entity",
+      voicemail_entities: "editor.voicemail_entities",
       device: "editor.device",
       language: "editor.language",
       max_calls: "editor.max_calls",
@@ -164,7 +164,7 @@ class FritzboxCallCardEditor extends LitElement {
         <strong>${loc("editor.info.header")}</strong>
         <ul>
           <li .innerHTML=${loc("editor.info.call_entities")}></li>
-          <li .innerHTML=${loc("editor.info.voicemail_entity")}></li>
+          <li .innerHTML=${loc("editor.info.voicemail_entities")}></li>
         </ul>
       </div>
 

@@ -23,7 +23,7 @@ class FritzboxCallCard extends HTMLElement {
   static getStubConfig() {
     return {
       call_entities: [],
-      voicemail_entity: null,
+      voicemail_entities: [],
       max_calls: DEFAULT_MAX_CALLS,
       max_hours: DEFAULT_MAX_HOURS,
       font_size: null,
@@ -43,7 +43,7 @@ class FritzboxCallCard extends HTMLElement {
     this.config = {
       ...config,
       title: config.title || DEFAULT_TITLE,
-      voicemail_entity: config.voicemail_entity || null,
+      voicemail_entities: config.voicemail_entities || [],
       max_calls: parsedMaxCalls,
       max_hours: parsedMaxHours,
       font_size: parsedFontSize,
@@ -88,7 +88,7 @@ class FritzboxCallCard extends HTMLElement {
     if (this._hass) this.render();
   }
 
-  async escapeHtml(value) {
+  async _escapeHtml(value) {
     if (value === undefined || value === null) {
       return '';
     }
@@ -156,8 +156,8 @@ class FritzboxCallCard extends HTMLElement {
       entries.push({
         id: `${entityId}-${item.state}-${item.last_changed || item.last_updated || ''}`,
         number: rawNumber, 
-        headline: escapeHtml(rawNumber),
-        label: escapeHtml(rawLabel),
+        headline: this._escapeHtml(rawNumber),
+        label: this._escapeHtml(rawLabel),
         state: item.state,
         type: item.attributes?.type || '',
         time: this._resolveCallTime(item, start),
@@ -358,7 +358,7 @@ class FritzboxCallCard extends HTMLElement {
 
     const chipBase = 'padding:0.3em 0.8em; border-radius:12px; border:1px solid var(--divider-color, #ddd); background:var(--card-background-color, #fff); color:var(--primary-text-color); cursor:pointer; font-size:0.85em; font-weight:500; transition: all 0.2s;';
     const chipSel = 'background:var(--primary-color, #1e88e5); color:#fff; border-color:var(--primary-color, #1e88e5);';
-    const safeTitle = escapeHtml(title);
+    const safeTitle = this._escapeHtml(title);
 
     if (this._loading) {
       this.innerHTML = `<ha-card header="${safeTitle}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); ${contentStyle}">${this._localize('common.loading') || 'Loading...'}</div></ha-card>`;
@@ -368,7 +368,7 @@ class FritzboxCallCard extends HTMLElement {
     this.innerHTML = `
       <ha-card header="${title}">
         <div style="padding:0 16px 12px 16px; display:flex; flex-direction:column; gap:8px; ${contentStyle}">
-          ${this.config?.voicemail_entity ? `<div>${this.voicemail.render(baseFontSize)}</div>` : ''}
+          ${this.config?.voicemail_entities?.length > 0 ? `<div>${this.voicemail.render(baseFontSize)}</div>` : ''}
           <div style="display:flex; gap:6px; align-items:center;">
             <button class="fbc-chip" data-filter="all" style="${chipBase} ${this._filter === 'all' ? chipSel : ''}">${this._localize('common.all') || 'All'}</button>
             <button class="fbc-chip" data-filter="missed" style="${chipBase} ${this._filter === 'missed' ? chipSel : ''}">${this._localize('call.missed') || 'Missed'}</button>

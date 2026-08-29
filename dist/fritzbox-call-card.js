@@ -532,7 +532,7 @@ var X = {
 	editor: {
 		title: "Title",
 		call_entities: "Call log entities",
-		voicemail_entity: "Voicemail entity (optional)",
+		voicemail_entities: "Voicemail entities (optional)",
 		language: "Language",
 		max_calls: "Max calls",
 		font_size: "Font size (optional)",
@@ -569,7 +569,7 @@ var X = {
 	editor: {
 		title: "Titel",
 		call_entities: "Telefonbuch-Entitäten",
-		voicemail_entity: "Voicemail Entität (optional)",
+		voicemail_entities: "Voicemail-Entitäten (optional)",
 		language: "Sprache",
 		max_calls: "Max. Anrufe",
 		font_size: "Schriftgröße (optional)",
@@ -612,7 +612,7 @@ var X = {
 		this._config = {
 			title: "",
 			call_entities: [],
-			voicemail_entity: "",
+			voicemail_entities: [],
 			font_size: null,
 			max_calls: 10,
 			max_hours: 24,
@@ -644,9 +644,9 @@ var X = {
 				} }
 			},
 			{
-				name: "voicemail_entity",
+				name: "voicemail_entities",
 				selector: { entity: {
-					multiple: !1,
+					multiple: !0,
 					filter: [{
 						domain: ["sensor"],
 						integration: "fritzbox_voicemail"
@@ -683,7 +683,7 @@ var X = {
 		let n = this._config?.language || this.hass?.locale?.language || "en", r = {
 			title: "editor.title",
 			call_entities: "editor.call_entities",
-			voicemail_entity: "editor.voicemail_entity",
+			voicemail_entities: "editor.voicemail_entities",
 			device: "editor.device",
 			language: "editor.language",
 			max_calls: "editor.max_calls",
@@ -701,7 +701,7 @@ var X = {
         <strong>${n("editor.info.header")}</strong>
         <ul>
           <li .innerHTML=${n("editor.info.call_entities")}></li>
-          <li .innerHTML=${n("editor.info.voicemail_entity")}></li>
+          <li .innerHTML=${n("editor.info.voicemail_entities")}></li>
         </ul>
       </div>
 
@@ -747,24 +747,49 @@ function ve(e, t) {
 }
 //#endregion
 //#region src/voicemail.js
+function Q(e) {
+	return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+}
 var ye = class {
 	constructor(e) {
-		this.card = e, this.audio = null, this.currentlyPlayingIndex = null, this.root = null;
+		this.card = e, this.audio = null, this.currentlyPlayingIndex = null, this.root = null, this.mediaSourceCache = /* @__PURE__ */ new Map();
 	}
-	get entity() {
-		return this.card.config?.voicemail_entity && this.card._hass && this.card._hass.states[this.card.config.voicemail_entity] || null;
+	get entities() {
+		return !this.card?.config?.voicemail_entities || !this.card._hass ? [] : (Array.isArray(this.card.config.voicemail_entities) ? this.card.config.voicemail_entities : [this.card.config.voicemail_entities]).map((e) => this.card._hass.states[e]).filter(Boolean);
 	}
 	get messages() {
-		return this.entity?.attributes?.messages || [];
+		let e = [];
+		for (let t of this.entities) {
+			let n = t.attributes?.messages || [], r = t.attributes?.entry_id || "default";
+			n.forEach((n) => {
+				let i = n.Tam === void 0 ? 0 : n.Tam, a = t.attributes?.device_id || t.attributes?.entry_id || null;
+				e.push({
+					...n,
+					_entityId: t.entity_id,
+					_entryId: r,
+					_deviceId: a,
+					_tamIndex: i,
+					_uniqueId: `${t.entity_id}-${n.Index}`.replace(/\./g, "_")
+				});
+			});
+		}
+		return e.sort((e, t) => new Date(t.Date) - new Date(e.Date));
 	}
 	async deleteMessage(e) {
-		if (confirm("Are you sure you want to delete this voicemail?")) try {
+		if (!confirm("Are you sure you want to delete this voicemail?")) return;
+		let t = this.messages.find((t) => t._uniqueId === e);
+		if (!t) {
+			console.error(`Message not found for ID: ${e}`);
+			return;
+		}
+		let n = this.entities.find((e) => e.entity_id === t._entityId), r = n?.attributes?.device_id || n?.attributes?.entry_id || t._entryId;
+		try {
 			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
 				delete_mode: "specific",
-				message_index: Number(e)
-			});
+				message_index: Number(t.Index)
+			}, { device_id: r });
 		} catch (e) {
-			console.error(e);
+			console.error("Fehler beim Löschen der Nachricht:", e);
 		}
 	}
 	async deleteAll() {
@@ -786,28 +811,28 @@ var ye = class {
         </div>
         <ul style="list-style:none; padding:0; margin:0; max-height:180px; overflow-y:auto;">
           ${this.messages.map((e) => {
-			let t = String(e.Index) === String(this.currentlyPlayingIndex);
+			let t = String(e._uniqueId) === String(this.currentlyPlayingIndex), r = Q(e.Name || e.Number || "Unknown"), i = Q(e.Date || ""), a = Q(e._uniqueId);
 			return `
               <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; width:100%; min-width:0;">
                   <div style="min-width:0; flex-grow:1;">
-                    <strong style="font-size:${n(.92)}; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${e.Name || e.Number || "Unknown"}</strong>
-                    <small style="font-size:${n(.77)}; color:var(--secondary-text-color); display:block;">${e.Date || ""}</small>
+                    <strong style="font-size:${n(.92)}; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r}</strong>
+                    <small style="font-size:${n(.77)}; color:var(--secondary-text-color); display:block;">${i}</small>
                   </div>
-                  <button class="fbc-voicemail-delete" data-index="${e.Index}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
+                  <button class="fbc-voicemail-delete" data-id="${a}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
                 </div>
                 ${e.Index === void 0 ? "" : `
-                  <div class="fbc-audio-player-row" data-index="${e.Index}" style="display:flex; align-items:center; gap:8px; width:100%;">
-                    <button class="fbc-voicemail-toggle" data-index="${e.Index}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
+                  <div class="fbc-audio-player-row" data-id="${a}" style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <button class="fbc-voicemail-toggle" data-id="${a}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
                       ${t && !this.audio?.paused ? "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"4\" y=\"4\" width=\"4\" height=\"16\"/><rect x=\"16\" y=\"4\" width=\"4\" height=\"16\"/></svg>" : "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\" style=\"margin-left:1px;\"><polygon points=\"5 3 19 12 5 21\"/></svg>"}
                     </button>
                     <div style="flex-grow:1; display:flex; flex-direction:column;">
-                      <input type="range" class="fbc-audio-slider" data-index="${e.Index}" min="0" max="100" value="0" step="0.1" ${t ? "" : "disabled"} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
+                      <input type="range" class="fbc-audio-slider" data-id="${a}" min="0" max="100" value="0" step="0.1" ${t ? "" : "disabled"} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
                       <div style="display:flex; justify-content:space-between; font-size:${n(.69)}; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
-                        <span class="fbc-audio-current-time" data-index="${e.Index}">0:00</span>
-                        <span class="fbc-audio-duration" data-index="${e.Index}" data-initial=""></span>
+                        <span class="fbc-audio-current-time" data-id="${a}">0:00</span>
+                        <span class="fbc-audio-duration" data-id="${a}" data-initial=""></span>
                       </div>
                     </div>
                   </div>
@@ -820,9 +845,9 @@ var ye = class {
     ` : `<div style="padding:4px 0; font-size:${n(1)}; color:var(--secondary-text-color);">No messages</div>`;
 	}
 	attachEvents(e) {
-		this.root = e, e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => e.onclick = () => this.deleteMessage(e.dataset.index));
+		this.root = e, e.querySelectorAll(".fbc-voicemail-delete").forEach((e) => e.onclick = () => this.deleteMessage(e.dataset.id));
 		let t = e.querySelector(".fbc-voicemail-delete-all");
-		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-toggle").forEach((e) => e.onclick = () => this.handlePlayPause(e.dataset.index)), e.querySelectorAll(".fbc-audio-slider").forEach((e) => e.oninput = (t) => this.handleSeek(t, e.dataset.index));
+		t && (t.onclick = () => this.deleteAll()), e.querySelectorAll(".fbc-voicemail-toggle").forEach((e) => e.onclick = () => this.handlePlayPause(e.dataset.id)), e.querySelectorAll(".fbc-audio-slider").forEach((e) => e.oninput = (t) => this.handleSeek(t, e.dataset.id));
 	}
 	stopCurrentAudio() {
 		this.audio &&= (this.audio.pause(), this.audio.ontimeupdate = this.audio.onloadedmetadata = this.audio.onended = null, null);
@@ -833,28 +858,101 @@ var ye = class {
 			return;
 		}
 		this.currentlyPlayingIndex !== null && this.resetTrackVisuals(this.currentlyPlayingIndex), this.stopCurrentAudio(), this.currentlyPlayingIndex = e, this.updateButtonUI(e, "loading");
+		let t = this.messages.find((t) => t._uniqueId === e);
+		if (!t) {
+			console.error("Message not found for uniqueId:", e), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
+			return;
+		}
 		try {
-			let t = `media-source://fritzbox_voicemail/${e}`, n = await this.card._hass.callWS({
-				type: "media_source/resolve_media",
-				media_content_id: t
-			});
+			let n = await this.resolveMediaSource(t);
 			if (!n?.url) throw Error("No playback URL resolved");
 			let r = window.location.origin + n.url;
 			this.audio = new Audio(r), this.audio.type = n.mime_type || "audio/wav", this.audio.onloadedmetadata = () => {
-				let t = this.root.querySelector(`.fbc-audio-duration[data-index="${e}"]`);
+				let t = this.root.querySelector(`.fbc-audio-duration[data-id="${e}"]`);
 				t && (t.textContent = this.formatTime(this.audio.duration));
 			}, this.audio.ontimeupdate = () => {
 				if (!this.audio) return;
-				let t = this.audio.currentTime / this.audio.duration * 100, n = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`), r = this.root.querySelector(`.fbc-audio-current-time[data-index="${e}"]`);
+				let t = this.audio.currentTime / this.audio.duration * 100, n = this.root.querySelector(`.fbc-audio-slider[data-id="${e}"]`), r = this.root.querySelector(`.fbc-audio-current-time[data-id="${e}"]`);
 				n && (n.value = t || 0), r && (r.textContent = this.formatTime(this.audio.currentTime));
 			}, this.audio.onended = () => {
 				this.resetTrackVisuals(e), this.stopCurrentAudio(), this.currentlyPlayingIndex = null;
 			};
-			let i = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`);
+			let i = this.root.querySelector(`.fbc-audio-slider[data-id="${e}"]`);
 			i && (i.disabled = !1), await this.audio.play(), this.updateButtonUI(e, "playing");
 		} catch (t) {
-			console.error("Audio engine failed:", t), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
+			console.error("Audio engine failed via media_source:", t), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
 		}
+	}
+	getMediaSourceIds(e) {
+		let t = [
+			e?._entryId,
+			e?._deviceId,
+			e?._entityId,
+			"default"
+		].map((e) => e == null ? "" : String(e).trim()).filter(Boolean);
+		return [...new Set(t)];
+	}
+	async resolveMediaSource(e) {
+		let t = this.getMediaSourceIds(e), n = null;
+		for (let r of t) {
+			let t = `media-source://fritzbox_voicemail/${r}/${e._tamIndex}/${e.Index}`;
+			try {
+				let e = await this.card._hass.callWS({
+					type: "media_source/resolve_media",
+					media_content_id: t
+				});
+				if (e?.url) return e;
+			} catch (e) {
+				n = e;
+			}
+		}
+		let r = await this.discoverMediaSourceId(e);
+		if (r) try {
+			let t = `media-source://fritzbox_voicemail/${r}/${e._tamIndex}/${e.Index}`, n = await this.card._hass.callWS({
+				type: "media_source/resolve_media",
+				media_content_id: t
+			});
+			if (n?.url) return n;
+		} catch (e) {
+			n = e;
+		}
+		throw n || /* @__PURE__ */ Error(`Unable to resolve voicemail media for ${e?._uniqueId || e?.Index}`);
+	}
+	async discoverMediaSourceId(e) {
+		let t = e?._uniqueId || `${e?._entityId || ""}:${e?.Index || ""}`;
+		if (this.mediaSourceCache.has(t)) return this.mediaSourceCache.get(t);
+		try {
+			let n = await this.card._hass.callWS({
+				type: "media_source/browse_media",
+				media_content_id: "media-source://fritzbox_voicemail"
+			}), r = this.buildExpectedTitle(e), i = this.findMediaSourceMatch(n, r, e);
+			if (i) {
+				let e = String(i.identifier || "").split("/")[0];
+				if (e) return this.mediaSourceCache.set(t, e), e;
+			}
+		} catch (e) {
+			console.warn("Unable to browse voicemail media source for discovery:", e);
+		}
+		return null;
+	}
+	findMediaSourceMatch(e, t, n) {
+		if (!e) return null;
+		let r = Array.isArray(e.children) ? e.children : [];
+		for (let e of r) {
+			if (this.isMatchingVoicemailNode(e, t, n)) return e;
+			let r = this.findMediaSourceMatch(e, t, n);
+			if (r) return r;
+		}
+		return null;
+	}
+	isMatchingVoicemailNode(e, t, n) {
+		if (!e) return !1;
+		let r = String(e.identifier || "").split("/").filter(Boolean);
+		return r.length < 3 || String(r[2]) !== String(n?.Index) ? !1 : t ? String(e.title || "").trim() === t : !0;
+	}
+	buildExpectedTitle(e) {
+		let t = [], n = e?.Number ? String(e.Number).trim() : "", r = e?.Name ? String(e.Name).trim() : "", i = e?.Date ? String(e.Date).trim() : "";
+		return t.push(n || "Unknown"), r && t.push(r), i && t.push(i), t.join(" - ");
 	}
 	handleSeek(e, t) {
 		if (String(this.currentlyPlayingIndex) === String(t) && this.audio && this.audio.duration) {
@@ -863,24 +961,24 @@ var ye = class {
 		}
 	}
 	updateButtonUI(e, t) {
-		let n = this.root.querySelector(`.fbc-voicemail-toggle[data-index="${e}"]`);
+		let n = this.root.querySelector(`.fbc-voicemail-toggle[data-id="${CSS.escape(String(e))}"]`);
 		n && (t === "playing" ? n.innerHTML = "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><rect x=\"4\" y=\"4\" width=\"4\" height=\"16\"/><rect x=\"16\" y=\"4\" width=\"4\" height=\"16\"/></svg>" : t === "loading" ? n.innerHTML = "\n          <svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" \n            style=\"animation: fbc-spin 1s linear infinite; transform-origin: center;\">\n            <circle cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-opacity=\"0.25\"></circle>\n            <path d=\"M12 2a10 10 0 0 1 10 10\" stroke=\"currentColor\" stroke-linecap=\"round\"></path>\n            <style>\n              @keyframes fbc-spin {\n                0% { transform: rotate(0deg); }\n                100% { transform: rotate(360deg); }\n              }\n            </style>\n          </svg>" : n.innerHTML = "<svg width=\"10\" height=\"10\" viewBox=\"0 0 24 24\" fill=\"currentColor\" style=\"margin-left:1px;\"><polygon points=\"5 3 19 12 5 21\"/></svg>");
 	}
 	resetTrackVisuals(e) {
 		this.updateButtonUI(e, "paused");
-		let t = this.root.querySelector(`.fbc-audio-slider[data-index="${e}"]`), n = this.root.querySelector(`.fbc-audio-current-time[data-index="${e}"]`), r = this.root.querySelector(`.fbc-audio-duration[data-index="${e}"]`);
-		t && (t.value = 0, t.disabled = !0), n && (n.textContent = "0:00"), r && (r.textContent = r.dataset.initial || "0:00");
+		let t = CSS.escape(String(e)), n = this.root.querySelector(`.fbc-audio-slider[data-id="${t}"]`), r = this.root.querySelector(`.fbc-audio-current-time[data-id="${t}"]`), i = this.root.querySelector(`.fbc-audio-duration[data-id="${t}"]`);
+		n && (n.value = 0, n.disabled = !0), r && (r.textContent = "0:00"), i && (i.textContent = i.dataset.initial || "0:00");
 	}
 	formatTime(e) {
 		if (isNaN(e)) return "0:00";
 		let t = Math.floor(e / 60), n = Math.floor(e % 60);
 		return `${t}:${n < 10 ? "0" : ""}${n}`;
 	}
-}, Q = "Fritz!Box Calls", be = 10, xe = 24, Se = 13, Ce = 10, we = 24, $ = new Set([
+}, $ = "Fritz!Box Calls", be = 10, xe = 24, Se = 13, Ce = 10, we = 24, Te = new Set([
 	"talking",
 	"dialing",
 	"ringing"
-]), Te = class extends HTMLElement {
+]), Ee = class extends HTMLElement {
 	langs = {
 		en: X,
 		de: Z
@@ -891,11 +989,11 @@ var ye = class {
 	static getStubConfig() {
 		return {
 			call_entities: [],
-			voicemail_entity: null,
+			voicemail_entities: [],
 			max_calls: be,
 			max_hours: xe,
 			font_size: null,
-			title: Q
+			title: $
 		};
 	}
 	setConfig(e) {
@@ -903,8 +1001,8 @@ var ye = class {
 		let t = this._parseInteger(e.max_calls, be), n = this._parseInteger(e.max_hours, xe), r = this._parseOptionalFontSize(e.font_size);
 		this.config = {
 			...e,
-			title: e.title || Q,
-			voicemail_entity: e.voicemail_entity || null,
+			title: e.title || $,
+			voicemail_entities: e.voicemail_entities || [],
 			max_calls: t,
 			max_hours: n,
 			font_size: r
@@ -927,6 +1025,9 @@ var ye = class {
 	connectedCallback() {
 		this._hass && this.render();
 	}
+	async _escapeHtml(e) {
+		return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+	}
 	async _updateHistory() {
 		if (!this._hass || !Array.isArray(this.config.call_entities)) return;
 		let e = /* @__PURE__ */ new Date(), t = this.config.max_hours * 60 * 60 * 1e3, n = new Date(e.getTime() - t), r = (await Promise.all(this.config.call_entities.map((t) => this._fetchEntityHistory(t, n, e)))).flatMap((e, t) => this._buildCallEntries(e, this.config.call_entities[t]));
@@ -947,13 +1048,13 @@ var ye = class {
 		let n = this._resolveEntityId(t), r = [...e].sort((e, t) => new Date(e.last_changed) - new Date(t.last_changed)), i = [];
 		for (let e = 0; e < r.length; e++) {
 			let a = r[e];
-			if (!$.has(a.state) || a.state === "ringing" && ve(r, e)) continue;
-			let o = new Date(a.last_changed), s = this._getHistoryEndTime(r, e, n);
+			if (!Te.has(a.state) || a.state === "ringing" && ve(r, e)) continue;
+			let o = new Date(a.last_changed), s = this._getHistoryEndTime(r, e, n), c = this._extractNumber(a), l = this._extractLabel(a, t);
 			i.push({
 				id: `${n}-${a.state}-${a.last_changed || a.last_updated || ""}`,
-				number: this._extractNumber(a),
-				headline: this._extractNumber(a),
-				label: this._extractLabel(a, t),
+				number: c,
+				headline: this._escapeHtml(c),
+				label: this._escapeHtml(l),
 				state: a.state,
 				type: a.attributes?.type || "",
 				time: this._resolveCallTime(a, o),
@@ -972,7 +1073,7 @@ var ye = class {
 		let r = e[t];
 		for (let n = t + 1; n < e.length; n++) if (e[n].state !== r.state) return new Date(e[n].last_changed || e[n].last_updated || Date.now());
 		let i = this._hass?.states?.[n];
-		return i && !$.has(i.state) ? new Date(i.last_changed || i.last_updated || Date.now()) : /* @__PURE__ */ new Date();
+		return i && !Te.has(i.state) ? new Date(i.last_changed || i.last_updated || Date.now()) : /* @__PURE__ */ new Date();
 	}
 	_resolveCallTime(e, t) {
 		return e.state === "talking" && e.attributes?.accepted ? new Date(e.attributes.accepted) : e.state === "dialing" && e.attributes?.initiated ? new Date(e.attributes.initiated) : t;
@@ -1068,15 +1169,15 @@ var ye = class {
 		return r;
 	}
 	render() {
-		let e = this.config?.title || this._localize("common.call_history"), t = this._getFilteredCalls(), n = this._getBaseFontSize(), r = `font-size:${n}px;`, i = "padding:0.3em 0.8em; border-radius:12px; border:1px solid var(--divider-color, #ddd); background:var(--card-background-color, #fff); color:var(--primary-text-color); cursor:pointer; font-size:0.85em; font-weight:500; transition: all 0.2s;", a = "background:var(--primary-color, #1e88e5); color:#fff; border-color:var(--primary-color, #1e88e5);";
+		let e = this.config?.title || this._localize("common.call_history"), t = this._getFilteredCalls(), n = this._getBaseFontSize(), r = `font-size:${n}px;`, i = "padding:0.3em 0.8em; border-radius:12px; border:1px solid var(--divider-color, #ddd); background:var(--card-background-color, #fff); color:var(--primary-text-color); cursor:pointer; font-size:0.85em; font-weight:500; transition: all 0.2s;", a = "background:var(--primary-color, #1e88e5); color:#fff; border-color:var(--primary-color, #1e88e5);", o = this._escapeHtml(e);
 		if (this._loading) {
-			this.innerHTML = `<ha-card header="${e}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); ${r}">${this._localize("common.loading") || "Loading..."}</div></ha-card>`;
+			this.innerHTML = `<ha-card header="${o}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); ${r}">${this._localize("common.loading") || "Loading..."}</div></ha-card>`;
 			return;
 		}
 		this.innerHTML = `
       <ha-card header="${e}">
         <div style="padding:0 16px 12px 16px; display:flex; flex-direction:column; gap:8px; ${r}">
-          ${this.config?.voicemail_entity ? `<div>${this.voicemail.render(n)}</div>` : ""}
+          ${this.config?.voicemail_entities?.length > 0 ? `<div>${this.voicemail.render(n)}</div>` : ""}
           <div style="display:flex; gap:6px; align-items:center;">
             <button class="fbc-chip" data-filter="all" style="${i} ${this._filter === "all" ? a : ""}">${this._localize("common.all") || "All"}</button>
             <button class="fbc-chip" data-filter="missed" style="${i} ${this._filter === "missed" ? a : ""}">${this._localize("call.missed") || "Missed"}</button>
@@ -1102,5 +1203,5 @@ var ye = class {
 		}), this.voicemail && this.voicemail.attachEvents(this);
 	}
 };
-customElements.define("fritzbox-call-card", Te);
+customElements.define("fritzbox-call-card", Ee);
 //#endregion
