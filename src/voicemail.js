@@ -1,3 +1,16 @@
+
+function escapeHtml(value) {
+  if (value === undefined || value === null) {
+    return '';
+  }
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 export class FritzboxVoicemail {
   constructor(card) {
     this.card = card;
@@ -50,30 +63,34 @@ export class FritzboxVoicemail {
         <ul style="list-style:none; padding:0; margin:0; max-height:180px; overflow-y:auto;">
           ${this.messages.map((msg) => {
             const isCur = String(msg.Index) === String(this.currentlyPlayingIndex);
+            const safeVoicemailName = escapeHtml(msg.Name || msg.Number || "Unknown");
+            const safeVoicemailDate = escapeHtml(msg.Date || "");
+            const safeIndex = Number(msg.Index);
+
             return `
               <li style="padding:6px 0; border-bottom:1px solid var(--divider-color, #eee); display:flex; flex-direction:column; gap:4px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; width:100%; min-width:0;">
                   <div style="min-width:0; flex-grow:1;">
-                    <strong style="font-size:${scaledText(0.92)}; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.Name || msg.Number || "Unknown"}</strong>
-                    <small style="font-size:${scaledText(0.77)}; color:var(--secondary-text-color); display:block;">${msg.Date || ""}</small>
+                    <strong style="font-size:${scaledText(0.92)}; color:var(--primary-text-color); display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeVoicemailName}</strong>
+                    <small style="font-size:${scaledText(0.77)}; color:var(--secondary-text-color); display:block;">${safeVoicemailDate}</small>
                   </div>
-                  <button class="fbc-voicemail-delete" data-index="${msg.Index}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
+                  <button class="fbc-voicemail-delete" data-index="${safeIndex}" style="border:none; background:none; cursor:pointer; color:var(--secondary-text-color); padding:4px; display:flex; align-items:center;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                   </button>
                 </div>
                 ${msg.Index !== undefined ? `
-                  <div class="fbc-audio-player-row" data-index="${msg.Index}" style="display:flex; align-items:center; gap:8px; width:100%;">
-                    <button class="fbc-voicemail-toggle" data-index="${msg.Index}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
+                  <div class="fbc-audio-player-row" data-index="${safeIndex}" style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <button class="fbc-voicemail-toggle" data-index="${safeIndex}" style="border:none; background:var(--primary-color, #1e88e5); color:#fff; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;">
                       ${isCur && !this.audio?.paused ? 
                         `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="4" height="16"/><rect x="16" y="4" width="4" height="16"/></svg>` : 
                         `<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="margin-left:1px;"><polygon points="5 3 19 12 5 21"/></svg>`
                       }
                     </button>
                     <div style="flex-grow:1; display:flex; flex-direction:column;">
-                      <input type="range" class="fbc-audio-slider" data-index="${msg.Index}" min="0" max="100" value="0" step="0.1" ${!isCur ? "disabled" : ""} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
+                      <input type="range" class="fbc-audio-slider" data-index="${safeIndex}" min="0" max="100" value="0" step="0.1" ${!isCur ? "disabled" : ""} style="width:100%; accent-color:var(--primary-color); cursor:pointer; margin:0; height:14px;">
                       <div style="display:flex; justify-content:space-between; font-size:${scaledText(0.69)}; color:var(--secondary-text-color); font-family:monospace; line-height:1;">
-                        <span class="fbc-audio-current-time" data-index="${msg.Index}">0:00</span>
-                        <span class="fbc-audio-duration" data-index="${msg.Index}" data-initial=""></span>
+                        <span class="fbc-audio-current-time" data-index="${safeIndex}">0:00</span>
+                        <span class="fbc-audio-duration" data-index="${safeIndex}" data-initial=""></span>
                       </div>
                     </div>
                   </div>

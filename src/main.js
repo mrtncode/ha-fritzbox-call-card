@@ -88,6 +88,19 @@ class FritzboxCallCard extends HTMLElement {
     if (this._hass) this.render();
   }
 
+  async escapeHtml(value) {
+    if (value === undefined || value === null) {
+      return '';
+    }
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+
   async _updateHistory() {
     if (!this._hass || !Array.isArray(this.config.call_entities)) return;
 
@@ -136,11 +149,15 @@ class FritzboxCallCard extends HTMLElement {
 
       const start = new Date(item.last_changed);
       const end = this._getHistoryEndTime(sorted, i, entityId);
+      
+      const rawNumber = this._extractNumber(item);
+      const rawLabel = this._extractLabel(item, entityConfig);
+
       entries.push({
         id: `${entityId}-${item.state}-${item.last_changed || item.last_updated || ''}`,
-        number: this._extractNumber(item),
-        headline: this._extractNumber(item),
-        label: this._extractLabel(item, entityConfig),
+        number: rawNumber, 
+        headline: escapeHtml(rawNumber),
+        label: escapeHtml(rawLabel),
         state: item.state,
         type: item.attributes?.type || '',
         time: this._resolveCallTime(item, start),
@@ -341,9 +358,10 @@ class FritzboxCallCard extends HTMLElement {
 
     const chipBase = 'padding:0.3em 0.8em; border-radius:12px; border:1px solid var(--divider-color, #ddd); background:var(--card-background-color, #fff); color:var(--primary-text-color); cursor:pointer; font-size:0.85em; font-weight:500; transition: all 0.2s;';
     const chipSel = 'background:var(--primary-color, #1e88e5); color:#fff; border-color:var(--primary-color, #1e88e5);';
+    const safeTitle = escapeHtml(title);
 
     if (this._loading) {
-      this.innerHTML = `<ha-card header="${title}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); ${contentStyle}">${this._localize('common.loading') || 'Loading...'}</div></ha-card>`;
+      this.innerHTML = `<ha-card header="${safeTitle}"><div style="padding:16px; min-height:80px; color:var(--secondary-text-color); ${contentStyle}">${this._localize('common.loading') || 'Loading...'}</div></ha-card>`;
       return;
     }
 
