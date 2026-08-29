@@ -60,6 +60,33 @@ Translations available for English and German. Other translations may follow :)
 4.  Restart Home Assistant.
 </details>
 
+## Configuration Options
+
+You can configure the card either via the Home Assistant dashboard UI editor or manually in your YAML configuration using the following parameters:
+
+| Option | Type | Default | Required | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `type` | string | | **Yes** | Must be `custom:fritzbox-call-card`. |
+| `call_entities` | list | `[]` | **Yes** | A list of Fritz!Box call monitor sensor entities (Domain: `sensor`, Integration: `fritzbox_callmonitor`). |
+| `title` | string | `""` | No | Card title displayed in the header. |
+| `voicemail_entity` | string | `""` | No | The voicemail entity provided by the `ha-fritzbox-voicemail` integration. |
+| `max_calls` | number | `10` | No | Maximum number of calls to display in the history list (Min: `1`, Max: `50`). |
+| `max_hours` | number | `24` | No | Only show calls from the last X hours (Min: `1`, Max: `72`). |
+| `font_size` | number | `null` | No | Base font size for the card text in pixels (Min: `10`, Max: `24`). |
+
+### YAML Example
+
+```yaml
+type: custom:fritzbox-call-card
+title: "My Home Calls"
+call_entities:
+  - sensor.fritz_box_7590_ax_call_monitor
+voicemail_entity: sensor.fritzbox_voicemail_messages
+max_calls: 15
+max_hours: 48
+font_size: 14
+```
+
 
 ---
 # Development
