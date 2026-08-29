@@ -38,7 +38,7 @@ export class FritzboxVoicemail {
     const combined = [];
     for (const ent of this.entities) {
       const msgs = ent.attributes?.messages || [];
-      const entryId = ent.attributes?.entry_id || "default";
+      const entryId = ent.attributes?.entry_id || null;
       
       msgs.forEach(msg => {
         const tamIdx = msg.Tam !== undefined ? msg.Tam : 0;
@@ -240,58 +240,39 @@ export class FritzboxVoicemail {
     }
   }
 
-  getMediaSourceIds(msg) {
-    const ids = [
-      msg?._entryId,
-      msg?._deviceId,
-      msg?._entityId,
-      "default",
-    ]
-      .map((value) => (value === null || typeof value === "undefined" ? "" : String(value).trim()))
-      .filter(Boolean);
+  async getConfigEntryId(entityId) {
+    const result = await this.card._hass.callWS({
+      type: "config/entity_registry/get",
+      entity_id: entityId,
+    });
 
-    return [...new Set(ids)];
+    return result?.config_entry_id || null;
   }
 
   async resolveMediaSource(msg) {
-    const sourceIds = this.getMediaSourceIds(msg);
-    let lastError = null;
+    const entryId = await this.getConfigEntryId(msg._entityId);
 
-    for (const sourceId of sourceIds) {
-      const mediaSourceId = `media-source://fritzbox_voicemail/${sourceId}/${msg._tamIndex}/${msg.Index}`;
-
-      try {
-        const resolvedMedia = await this.card._hass.callWS({
-          type: "media_source/resolve_media",
-          media_content_id: mediaSourceId,
-        });
-
-        if (resolvedMedia?.url) {
-          return resolvedMedia;
-        }
-      } catch (err) {
-        lastError = err;
-      }
+    if (!entryId) {
+      throw new Error(
+        `No config entry found for entity ${msg._entityId}`
+      );
     }
 
-    const discoveredSourceId = await this.discoverMediaSourceId(msg);
-    if (discoveredSourceId) {
-      try {
-        const mediaSourceId = `media-source://fritzbox_voicemail/${discoveredSourceId}/${msg._tamIndex}/${msg.Index}`;
-        const resolvedMedia = await this.card._hass.callWS({
-          type: "media_source/resolve_media",
-          media_content_id: mediaSourceId,
-        });
+    const mediaSourceId =
+      `media-source://fritzbox_voicemail/${entryId}/${msg._tamIndex}/${msg.Index}`;
 
-        if (resolvedMedia?.url) {
-          return resolvedMedia;
-        }
-      } catch (err) {
-        lastError = err;
-      }
-    }
+    console.debug("[Voicemail] Resolving media:", {
+      entity: msg._entityId,
+      entryId,
+      tamIndex: msg._tamIndex,
+      messageIndex: msg.Index,
+      mediaSourceId,
+    });
 
-    throw lastError || new Error(`Unable to resolve voicemail media for ${msg?._uniqueId || msg?.Index}`);
+    return this.card._hass.callWS({
+      type: "media_source/resolve_media",
+      media_content_id: mediaSourceId,
+    });
   }
 
   async discoverMediaSourceId(msg) {

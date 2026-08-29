@@ -760,7 +760,7 @@ var ye = class {
 	get messages() {
 		let e = [];
 		for (let t of this.entities) {
-			let n = t.attributes?.messages || [], r = t.attributes?.entry_id || "default";
+			let n = t.attributes?.messages || [], r = t.attributes?.entry_id || null;
 			n.forEach((n) => {
 				let i = n.Tam === void 0 ? 0 : n.Tam, a = t.attributes?.device_id || t.attributes?.entry_id || null;
 				e.push({
@@ -883,40 +883,26 @@ var ye = class {
 			console.error("Audio engine failed via media_source:", t), this.resetTrackVisuals(e), this.currentlyPlayingIndex = null;
 		}
 	}
-	getMediaSourceIds(e) {
-		let t = [
-			e?._entryId,
-			e?._deviceId,
-			e?._entityId,
-			"default"
-		].map((e) => e == null ? "" : String(e).trim()).filter(Boolean);
-		return [...new Set(t)];
+	async getConfigEntryId(e) {
+		return (await this.card._hass.callWS({
+			type: "config/entity_registry/get",
+			entity_id: e
+		}))?.config_entry_id || null;
 	}
 	async resolveMediaSource(e) {
-		let t = this.getMediaSourceIds(e), n = null;
-		for (let r of t) {
-			let t = `media-source://fritzbox_voicemail/${r}/${e._tamIndex}/${e.Index}`;
-			try {
-				let e = await this.card._hass.callWS({
-					type: "media_source/resolve_media",
-					media_content_id: t
-				});
-				if (e?.url) return e;
-			} catch (e) {
-				n = e;
-			}
-		}
-		let r = await this.discoverMediaSourceId(e);
-		if (r) try {
-			let t = `media-source://fritzbox_voicemail/${r}/${e._tamIndex}/${e.Index}`, n = await this.card._hass.callWS({
-				type: "media_source/resolve_media",
-				media_content_id: t
-			});
-			if (n?.url) return n;
-		} catch (e) {
-			n = e;
-		}
-		throw n || /* @__PURE__ */ Error(`Unable to resolve voicemail media for ${e?._uniqueId || e?.Index}`);
+		let t = await this.getConfigEntryId(e._entityId);
+		if (!t) throw Error(`No config entry found for entity ${e._entityId}`);
+		let n = `media-source://fritzbox_voicemail/${t}/${e._tamIndex}/${e.Index}`;
+		return console.debug("[Voicemail] Resolving media:", {
+			entity: e._entityId,
+			entryId: t,
+			tamIndex: e._tamIndex,
+			messageIndex: e.Index,
+			mediaSourceId: n
+		}), this.card._hass.callWS({
+			type: "media_source/resolve_media",
+			media_content_id: n
+		});
 	}
 	async discoverMediaSourceId(e) {
 		let t = e?._uniqueId || `${e?._entityId || ""}:${e?.Index || ""}`;
