@@ -1011,7 +1011,7 @@ var ye = class {
 	connectedCallback() {
 		this._hass && this.render();
 	}
-	async _escapeHtml(e) {
+	_escapeHtml(e) {
 		return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 	}
 	async _updateHistory() {

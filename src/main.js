@@ -88,7 +88,7 @@ class FritzboxCallCard extends HTMLElement {
     if (this._hass) this.render();
   }
 
-  async _escapeHtml(value) {
+  _escapeHtml(value) {
     if (value === undefined || value === null) {
       return '';
     }
