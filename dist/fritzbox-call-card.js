@@ -782,14 +782,26 @@ var ye = class {
 			console.error(`Message not found for ID: ${e}`);
 			return;
 		}
-		let n = this.entities.find((e) => e.entity_id === t._entityId), r = n?.attributes?.device_id || n?.attributes?.entry_id || t._entryId;
 		try {
 			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
 				delete_mode: "specific",
-				message_index: Number(t.Index)
-			}, { device_id: r });
+				message_index: Number(t.Index),
+				entity_id: t._entityId
+			});
 		} catch (e) {
 			console.error("Fehler beim Löschen der Nachricht:", e);
+		}
+	}
+	async deleteAll() {
+		if (confirm("Are you sure you want to delete ALL voicemails?")) try {
+			this.stopCurrentAudio();
+			let e = this.entities.map((e) => e.entity_id);
+			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
+				delete_mode: "all",
+				entity_id: e
+			});
+		} catch (e) {
+			console.error("Fehler beim Löschen aller Nachrichten:", e);
 		}
 	}
 	async deleteAll() {

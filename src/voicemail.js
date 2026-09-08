@@ -57,7 +57,7 @@ export class FritzboxVoicemail {
     return combined.sort((a, b) => new Date(b.Date) - new Date(a.Date));
   }
 
-  async deleteMessage(uniqueId) {
+async deleteMessage(uniqueId) {
     if (!confirm("Are you sure you want to delete this voicemail?")) return;
     
     const msg = this.messages.find(m => m._uniqueId === uniqueId);
@@ -66,21 +66,41 @@ export class FritzboxVoicemail {
       return;
     }
 
-    const ent = this.entities.find(e => e.entity_id === msg._entityId);
-    const deviceId = ent?.attributes?.device_id || ent?.attributes?.entry_id || msg._entryId;
-
     try {
       this.stopCurrentAudio();
       
-      await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { 
-        delete_mode: "specific", 
-        message_index: Number(msg.Index) 
-      }, {
-        device_id: deviceId 
-      });
+      await this.card._hass.callService(
+        "fritzbox_voicemail",
+        "delete_voicemail_message",
+        {
+          delete_mode: "specific",
+          message_index: Number(msg.Index),
+          entity_id: msg._entityId
+        }
+      );
 
     } catch (err) {
       console.error("Fehler beim Löschen der Nachricht:", err);
+    }
+  }
+
+  async deleteAll() {
+    if (!confirm("Are you sure you want to delete ALL voicemails?")) return;
+    try {
+      this.stopCurrentAudio();
+
+      const targetEntityIds = this.entities.map(e => e.entity_id);
+
+      await this.card._hass.callService(
+        "fritzbox_voicemail",
+        "delete_voicemail_message",
+        {
+          delete_mode: "all",
+          entity_id: targetEntityIds
+        }
+      );
+    } catch (err) {
+      console.error("Fehler beim Löschen aller Nachrichten:", err);
     }
   }
 
