@@ -789,26 +789,23 @@ var ye = class {
 				entity_id: t._entityId
 			});
 		} catch (e) {
-			console.error("Fehler beim Löschen der Nachricht:", e);
+			console.error("Error while deleting the message:", e);
 		}
 	}
 	async deleteAll() {
 		if (confirm("Are you sure you want to delete ALL voicemails?")) try {
 			this.stopCurrentAudio();
 			let e = this.entities.map((e) => e.entity_id);
-			await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
+			if (e.length === 0) {
+				console.warn("No voicemail entities found.");
+				return;
+			}
+			for (let t of e) await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", {
 				delete_mode: "all",
-				entity_id: e
+				entity_id: t
 			});
 		} catch (e) {
-			console.error("Fehler beim Löschen aller Nachrichten:", e);
-		}
-	}
-	async deleteAll() {
-		if (confirm("Are you sure you want to delete ALL voicemails?")) try {
-			this.stopCurrentAudio(), await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
-		} catch (e) {
-			console.error(e);
+			console.error("Error while deleting all messages:", e);
 		}
 	}
 	render(e = 13) {

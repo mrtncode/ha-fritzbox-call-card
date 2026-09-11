@@ -80,40 +80,37 @@ async deleteMessage(uniqueId) {
       );
 
     } catch (err) {
-      console.error("Fehler beim Löschen der Nachricht:", err);
+      console.error("Error while deleting the message:", err);
     }
   }
 
   async deleteAll() {
-    if (!confirm("Are you sure you want to delete ALL voicemails?")) return;
-    try {
-      this.stopCurrentAudio();
+      if (!confirm("Are you sure you want to delete ALL voicemails?")) return;
+      
+      try {
+        this.stopCurrentAudio();
 
-      const targetEntityIds = this.entities.map(e => e.entity_id);
+        const targetEntityIds = this.entities.map(e => e.entity_id);
 
-      await this.card._hass.callService(
-        "fritzbox_voicemail",
-        "delete_voicemail_message",
-        {
-          delete_mode: "all",
-          entity_id: targetEntityIds
+        if (targetEntityIds.length === 0) {
+          console.warn("No voicemail entities found.");
+          return;
         }
-      );
-    } catch (err) {
-      console.error("Fehler beim Löschen aller Nachrichten:", err);
-    }
-  }
 
-
-  async deleteAll() {
-    if (!confirm("Are you sure you want to delete ALL voicemails?")) return;
-    try {
-      this.stopCurrentAudio();
-      await this.card._hass.callService("fritzbox_voicemail", "delete_voicemail_message", { delete_mode: "all" });
-    } catch (err) {
-      console.error(err);
+        for (const entityId of targetEntityIds) {
+          await this.card._hass.callService(
+            "fritzbox_voicemail",
+            "delete_voicemail_message",
+            {
+              delete_mode: "all",
+              entity_id: entityId
+            }
+          );
+        }
+      } catch (err) {
+        console.error("Error while deleting all messages:", err);
+      }
     }
-  }
 
   render(baseFontSize = 13) {
     const base = Number.isFinite(baseFontSize) ? baseFontSize : 13;
