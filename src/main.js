@@ -215,7 +215,7 @@ class FritzboxCallCard extends HTMLElement {
       if (typeof val === 'string' && val.trim() && val.trim().toLowerCase() !== 'unknown') return val.trim();
     }
 
-    return state.entity_id;
+    return this._localize('common.unknown');
   }
 
   _extractLabel(state, entityConfig) {

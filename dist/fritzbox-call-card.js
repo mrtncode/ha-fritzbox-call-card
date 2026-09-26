@@ -1102,7 +1102,7 @@ var ye = class {
 			let n = t[e];
 			if (typeof n == "string" && n.trim() && n.trim().toLowerCase() !== "unknown") return n.trim();
 		}
-		return e.entity_id;
+		return this._localize("common.unknown");
 	}
 	_extractLabel(e, t) {
 		let { attributes: n = {}, state: r } = e || {}, i = String(n.type || "").toLowerCase(), a = (e) => typeof e == "string" && e.trim() !== "" && e.toLowerCase() !== "unknown", o = a(n.from_name) ? n.from_name : a(n.with_name) ? n.with_name : n.from || n.with, s = n.to_name && n.to_name.toLowerCase() !== "unknown" ? n.to_name : n.to, c = i === "outgoing" || !!s, l = this._localize(`state.${r}`) ?? r;
